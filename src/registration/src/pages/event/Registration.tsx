@@ -12,7 +12,7 @@ import {
   useToastController,
 } from "@fluentui/react-components";
 import { CopyRegular, EyeOffRegular, EyeRegular } from "@fluentui/react-icons";
-import { useEffect, useReducer } from "react";
+import { useEffect, useReducer, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { Form, useLoaderData, useParams } from "react-router-dom";
 import { reducer } from "./Registration.reducers";
@@ -152,6 +152,12 @@ export const Registration = () => {
       payload: { loaded, profile: clientPrincipal || undefined },
     });
   }, [loaded, clientPrincipal]);
+
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const interval = setInterval(() => setNow(Date.now()), 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const toasterId = useId("toaster");
   const { dispatchToast } = useToastController(toasterId);
@@ -309,7 +315,6 @@ export const Registration = () => {
     const startMs = new Date(event.startTimestamp).getTime() - offsetMs;
     const endMs = new Date(event.endTimestamp).getTime() - offsetMs;
     if (Number.isNaN(startMs) || Number.isNaN(endMs)) return "unknown";
-    const now = Date.now();
     if (now < startMs) return "not-started";
     if (now > endMs) return "ended";
     return "active";
