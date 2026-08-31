@@ -16,6 +16,33 @@
     },
     "proxyAppExists": {
       "value": "${SERVICE_PROXY_RESOURCE_EXISTS=false}"
+    },
+    "adminAppExists": {
+      "value": "${SERVICE_ADMIN_RESOURCE_EXISTS=false}"
+    },
+    "foundryLocation": {
+      "value": "${FOUNDRY_LOCATION}"
+    },
+    "foundryAccountName": {
+      "value": "${FOUNDRY_ACCOUNT_NAME=}"
+    },
+    "resourceGroupName": {
+      "value": "${AZURE_RESOURCE_GROUP}"
+    },
+    "useExistingResourceGroup": {
+      "value": "${USE_EXISTING_RESOURCE_GROUP=false}"
+    },
+    "entraClientId": {
+      "value": "${entraClientId}"
+    },
+    "entraTenantId": {
+      "value": "${entraTenantId}"
+    },
+    "adminUsername": {
+      "value": "${ADMIN_USERNAME=}"
+    },
+    "adminPassword": {
+      "value": "${ADMIN_PASSWORD=}"
     }
   }
 }

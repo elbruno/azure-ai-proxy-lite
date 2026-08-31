@@ -1,8 +1,8 @@
 targetScope = 'subscription'
 
 @minLength(1)
-@maxLength(64)
-@description('Name which is used to generate a short unique hash for each resource')
+@maxLength(12)
+@description('Name which is used to generate a short unique hash for each resource. Limited to 12 characters because Azure Container App names (\'<name>-<13-char-token>-proxy\') cannot exceed 32 characters.')
 param name string
 
 @minLength(1)
@@ -15,15 +15,31 @@ param name string
 })
 param location string
 
+@description('Name of the resource group to deploy into. Leave empty to create a new resource group named "<name>-rg". Set to the name of an existing resource group to deploy into it.')
+param resourceGroupName string = ''
+
+@description('Set to true when "resourceGroupName" refers to a resource group that already exists.')
+param useExistingResourceGroup bool = false
+
 param proxyAppExists bool = false
 
 param adminAppExists bool = false
+
+@description('Explicit name for the AI Foundry account. Leave empty to use the default "<envName>-<token>-aifoundry" convention. Must be globally unique across Azure.')
+param foundryAccountName string = ''
 
 @description('Entra ID (Azure AD) Client ID for admin UI authentication. Leave empty to use username/password auth.')
 param entraClientId string = ''
 
 @description('Entra ID (Azure AD) Tenant ID for admin UI authentication. Leave empty to use username/password auth.')
 param entraTenantId string = ''
+
+@description('Username for local admin authentication. Only used when entraClientId is empty.')
+param adminUsername string = ''
+
+@secure()
+@description('Password for local admin authentication. Only used when entraClientId is empty.')
+param adminPassword string = ''
 
 @description('Location for the Registration app resource group')
 @allowed(['centralus', 'eastus2', 'eastasia', 'westeurope', 'westus2'])
@@ -51,17 +67,20 @@ param encryptionKey string
 var resourceToken = toLower(uniqueString(subscription().id, name, location))
 var tags = { 'azd-env-name': name }
 var prefix = '${name}-${resourceToken}'
+var targetResourceGroupName = empty(resourceGroupName) ? '${name}-rg' : resourceGroupName
 
-resource resourceGroup 'Microsoft.Resources/resourceGroups@2024-03-01' = {
-  name: '${name}-rg'
+resource newResourceGroup 'Microsoft.Resources/resourceGroups@2024-03-01' = if (!useExistingResourceGroup) {
+  name: targetResourceGroupName
   location: location
   tags: tags
 }
 
+
 // Container apps host (including container registry)
 module containerApps 'core/host/container-apps.bicep' = {
   name: 'container-apps'
-  scope: resourceGroup
+  scope: az.resourceGroup(targetResourceGroupName)
+  dependsOn: [newResourceGroup]
   params: {
     name: '${prefix}-app'
     location: location
@@ -75,7 +94,8 @@ module containerApps 'core/host/container-apps.bicep' = {
 // Proxy app (API proxy only)
 module proxy 'app/proxy.bicep' = {
   name: 'proxy'
-  scope: resourceGroup
+  scope: az.resourceGroup(targetResourceGroupName)
+  dependsOn: [newResourceGroup]
   params: {
     name: '${prefix}-proxy'
     location: location
@@ -94,7 +114,8 @@ module proxy 'app/proxy.bicep' = {
 // Admin app (management UI)
 module admin 'app/admin.bicep' = {
   name: 'admin'
-  scope: resourceGroup
+  scope: az.resourceGroup(targetResourceGroupName)
+  dependsOn: [newResourceGroup]
   params: {
     name: '${prefix}-admin'
     location: location
@@ -109,6 +130,8 @@ module admin 'app/admin.bicep' = {
     proxyInternalUrl: 'https://${proxy.outputs.SERVICE_PROXY_NAME}.internal.${containerApps.outputs.defaultDomain}'
     entraClientId: entraClientId
     entraTenantId: entraTenantId
+    adminUsername: adminUsername
+    adminPassword: adminPassword
     appInsightsConnectionString: monitoring.outputs.applicationInsightsConnectionString
   }
 }
@@ -116,7 +139,8 @@ module admin 'app/admin.bicep' = {
 // Azure Storage Account (Table Storage for all data)
 module storageAccount 'storage.bicep' = {
   name: 'storage-account'
-  scope: resourceGroup
+  scope: az.resourceGroup(targetResourceGroupName)
+  dependsOn: [newResourceGroup]
   params: {
     name: take('${replace(prefix, '-', '')}st', 24)
     location: location
@@ -127,7 +151,8 @@ module storageAccount 'storage.bicep' = {
 // Grant proxy identity Storage Table Data Contributor scoped to the storage account.
 module storageRoleProxy 'core/security/storage-role-assignment.bicep' = {
   name: 'storage-role-proxy'
-  scope: resourceGroup
+  scope: az.resourceGroup(targetResourceGroupName)
+  dependsOn: [newResourceGroup]
   params: {
     storageAccountName: storageAccount.outputs.name
     principalId: proxy.outputs.SERVICE_PROXY_IDENTITY_PRINCIPAL_ID
@@ -139,7 +164,8 @@ module storageRoleProxy 'core/security/storage-role-assignment.bicep' = {
 // Grant admin identity Storage Table Data Contributor scoped to the storage account.
 module storageRoleAdmin 'core/security/storage-role-assignment.bicep' = {
   name: 'storage-role-admin'
-  scope: resourceGroup
+  scope: az.resourceGroup(targetResourceGroupName)
+  dependsOn: [newResourceGroup]
   params: {
     storageAccountName: storageAccount.outputs.name
     principalId: admin.outputs.SERVICE_ADMIN_IDENTITY_PRINCIPAL_ID
@@ -151,7 +177,8 @@ module storageRoleAdmin 'core/security/storage-role-assignment.bicep' = {
 // The Registration frontend
 module registration 'registration.bicep' = {
   name: 'registration'
-  scope: resourceGroup
+  scope: az.resourceGroup(targetResourceGroupName)
+  dependsOn: [newResourceGroup]
   params: {
     name: '${prefix}-registration'
     location: swaLocation
@@ -162,7 +189,8 @@ module registration 'registration.bicep' = {
 // link Registration to Proxy backend
 module swaLinkDotnet './linkSwaResource.bicep' = {
   name: 'frontend-link-dotnet'
-  scope: resourceGroup
+  scope: az.resourceGroup(targetResourceGroupName)
+  dependsOn: [newResourceGroup]
   params: {
     swaAppName: registration.outputs.SERVICE_WEB_NAME
     backendAppName: proxy.outputs.SERVICE_PROXY_NAME
@@ -172,19 +200,23 @@ module swaLinkDotnet './linkSwaResource.bicep' = {
 // Azure AI Foundry project (empty — deploy models into it)
 module foundry 'foundry.bicep' = {
   name: 'foundry'
-  scope: resourceGroup
+  scope: az.resourceGroup(targetResourceGroupName)
+  dependsOn: [newResourceGroup]
   params: {
     name: prefix
     location: foundryLocation
     tags: tags
     proxyPrincipalId: proxy.outputs.SERVICE_PROXY_IDENTITY_PRINCIPAL_ID
+    logAnalyticsWorkspaceId: monitoring.outputs.logAnalyticsWorkspaceId
+    accountName: foundryAccountName
   }
 }
 
 // Monitor application with Azure Monitor
 module monitoring 'core/monitor/monitoring.bicep' = {
   name: 'monitoring'
-  scope: resourceGroup
+  scope: az.resourceGroup(targetResourceGroupName)
+  dependsOn: [newResourceGroup]
   params: {
     location: location
     tags: tags
@@ -195,6 +227,7 @@ module monitoring 'core/monitor/monitoring.bicep' = {
 }
 
 output AZURE_LOCATION string = location
+output AZURE_RESOURCE_GROUP string = targetResourceGroupName
 output AZURE_CONTAINER_ENVIRONMENT_NAME string = containerApps.outputs.environmentName
 output AZURE_CONTAINER_REGISTRY_NAME string = containerApps.outputs.registryName
 output AZURE_CONTAINER_REGISTRY_ENDPOINT string = containerApps.outputs.registryLoginServer

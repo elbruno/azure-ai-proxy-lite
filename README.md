@@ -4,6 +4,9 @@ A managed, multi-tenant proxy that sits between workshop attendees and Azure AI 
 
 The solution documentation is published [here](https://microsoft.github.io/azure-ai-proxy-lite/).
 
+> **Deploying this repo?** See [MY_DEPLOYMENT.md](MY_DEPLOYMENT.md) for the live deployment's URLs,
+> admin access model, and step-by-step testing instructions.
+
 ![](docs/static/img/openai_proxy_banner.jpeg)
 
 ## Architecture
@@ -132,6 +135,62 @@ In Azure, the proxy and admin app use user-assigned managed identities with RBAC
 - One-command deploy with `azd up` (Container Apps + Static Web App + Table Storage)
 - Docker Compose for local development
 - Multi-tenant — run multiple workshops simultaneously with full data isolation
+
+#### Deploying with `azd`
+
+```bash
+azd auth login
+az login
+azd env new <env-name>
+azd up
+```
+
+The environment name becomes part of every resource name, so it **must be 12 characters or fewer**.
+Azure Container App names are capped at 32 characters and are generated as
+`<env-name>-<13-char-token>-proxy`; longer names fail during provisioning.
+
+By default `azd` creates a resource group named `<env-name>-rg`. To deploy into a different or
+already-existing resource group, set these before running `azd up`:
+
+```bash
+azd env set AZURE_RESOURCE_GROUP <resource-group-name>
+azd env set USE_EXISTING_RESOURCE_GROUP true   # omit or set to false to create it
+```
+
+Optional location overrides (both default to being prompted):
+
+```bash
+azd env set SWA_LOCATION eastus2       # Static Web App region
+azd env set FOUNDRY_LOCATION eastus2   # Azure AI Foundry region
+```
+
+By default every resource is named `<env-name>-<token>-<suffix>`, where `<token>` is a hash that
+keeps globally scoped names (storage account, container registry) unique. If you want the AI Foundry
+account to carry a readable, predictable name instead, pin it explicitly:
+
+```bash
+azd env set FOUNDRY_ACCOUNT_NAME my-foundry-name   # must be globally unique
+```
+
+This also becomes the account's custom subdomain, so the endpoint reads
+`https://my-foundry-name.cognitiveservices.azure.com`. Leave it unset to keep the hashed default.
+
+##### Windows prerequisites
+
+The `azd` pre/post-provision hooks are Bash scripts. On Windows they must run under **Git Bash**,
+not WSL — `azd` invokes whichever `bash` it finds first on `PATH`, and WSL's `bash` cannot read the
+Windows temp path that `azd` writes the hook script to (`exit code: 127`).
+
+Ensure `C:\Program Files\Git\bin` precedes `C:\Windows\System32` on `PATH`, or prepend it for the
+session:
+
+```powershell
+$env:PATH = 'C:\Program Files\Git\bin;' + $env:PATH
+azd up
+```
+
+Docker Desktop must also be running, since the proxy and admin images are built locally before
+being pushed to the container registry.
 
 ### Developer Experience
 

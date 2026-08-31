@@ -17,6 +17,11 @@ param registrationUrl string
 param proxyInternalUrl string
 param entraClientId string = ''
 param entraTenantId string = ''
+@description('Username for local password authentication. Only used when entraClientId is empty.')
+param adminUsername string = ''
+@secure()
+@description('Password for local password authentication. Only used when entraClientId is empty.')
+param adminPassword string = ''
 param imageName string = ''
 param keyVaultName string = ''
 
@@ -60,6 +65,12 @@ module app '../core/host/container-app-upsert.bicep' = {
         name: 'app-insights-connection-string'
         value: appInsightsConnectionString
       }
+      ...(empty(entraClientId) && !empty(adminPassword) ? [
+        {
+          name: 'admin-password'
+          value: adminPassword
+        }
+      ] : [])
     ]
     env: [
       {
@@ -108,7 +119,16 @@ module app '../core/host/container-app-upsert.bicep' = {
           name: 'AzureAd__CallbackPath'
           value: '/signin-oidc'
         }
-      ] : [])
+      ] : [
+        {
+          name: 'Admin__Username'
+          value: adminUsername
+        }
+        {
+          name: 'Admin__Password'
+          secretRef: 'admin-password'
+        }
+      ])
     ]
   }
 }

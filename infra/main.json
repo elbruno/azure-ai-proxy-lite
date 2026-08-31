@@ -4,17 +4,17 @@
   "metadata": {
     "_generator": {
       "name": "bicep",
-      "version": "0.42.1.51946",
-      "templateHash": "2084989660039417922"
+      "version": "0.39.26.7824",
+      "templateHash": "17952978416411698212"
     }
   },
   "parameters": {
     "name": {
       "type": "string",
       "minLength": 1,
-      "maxLength": 64,
+      "maxLength": 12,
       "metadata": {
-        "description": "Name which is used to generate a short unique hash for each resource"
+        "description": "Name which is used to generate a short unique hash for each resource. Limited to 12 characters because Azure Container App names ('<name>-<13-char-token>-proxy') cannot exceed 32 characters."
       }
     },
     "location": {
@@ -28,6 +28,20 @@
       },
       "minLength": 1
     },
+    "resourceGroupName": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Name of the resource group to deploy into. Leave empty to create a new resource group named \"<name>-rg\". Set to the name of an existing resource group to deploy into it."
+      }
+    },
+    "useExistingResourceGroup": {
+      "type": "bool",
+      "defaultValue": false,
+      "metadata": {
+        "description": "Set to true when \"resourceGroupName\" refers to a resource group that already exists."
+      }
+    },
     "proxyAppExists": {
       "type": "bool",
       "defaultValue": false
@@ -35,6 +49,13 @@
     "adminAppExists": {
       "type": "bool",
       "defaultValue": false
+    },
+    "foundryAccountName": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Explicit name for the AI Foundry account. Leave empty to use the default \"<envName>-<token>-aifoundry\" convention. Must be globally unique across Azure."
+      }
     },
     "entraClientId": {
       "type": "string",
@@ -48,6 +69,20 @@
       "defaultValue": "",
       "metadata": {
         "description": "Entra ID (Azure AD) Tenant ID for admin UI authentication. Leave empty to use username/password auth."
+      }
+    },
+    "adminUsername": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Username for local admin authentication. Only used when entraClientId is empty."
+      }
+    },
+    "adminPassword": {
+      "type": "securestring",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Password for local admin authentication. Only used when entraClientId is empty."
       }
     },
     "swaLocation": {
@@ -78,7 +113,7 @@
       }
     },
     "encryptionKey": {
-      "type": "secureString",
+      "type": "securestring",
       "metadata": {
         "description": "High-entropy encryption key used to protect stored secrets and internal cache invalidation."
       }
@@ -89,13 +124,15 @@
     "tags": {
       "azd-env-name": "[parameters('name')]"
     },
-    "prefix": "[format('{0}-{1}', parameters('name'), variables('resourceToken'))]"
+    "prefix": "[format('{0}-{1}', parameters('name'), variables('resourceToken'))]",
+    "targetResourceGroupName": "[if(empty(parameters('resourceGroupName')), format('{0}-rg', parameters('name')), parameters('resourceGroupName'))]"
   },
   "resources": [
     {
+      "condition": "[not(parameters('useExistingResourceGroup'))]",
       "type": "Microsoft.Resources/resourceGroups",
       "apiVersion": "2024-03-01",
-      "name": "[format('{0}-rg', parameters('name'))]",
+      "name": "[variables('targetResourceGroupName')]",
       "location": "[parameters('location')]",
       "tags": "[variables('tags')]"
     },
@@ -103,7 +140,7 @@
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2025-04-01",
       "name": "container-apps",
-      "resourceGroup": "[format('{0}-rg', parameters('name'))]",
+      "resourceGroup": "[variables('targetResourceGroupName')]",
       "properties": {
         "expressionEvaluationOptions": {
           "scope": "inner"
@@ -126,7 +163,7 @@
             "value": "[format('{0}registry', replace(variables('prefix'), '-', ''))]"
           },
           "logAnalyticsWorkspaceName": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-rg', parameters('name'))), 'Microsoft.Resources/deployments', 'monitoring'), '2025-04-01').outputs.logAnalyticsWorkspaceName.value]"
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('targetResourceGroupName')), 'Microsoft.Resources/deployments', 'monitoring'), '2025-04-01').outputs.logAnalyticsWorkspaceName.value]"
           }
         },
         "template": {
@@ -135,8 +172,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.42.1.51946",
-              "templateHash": "3145187995034309148"
+              "version": "0.39.26.7824",
+              "templateHash": "11761284505252758516"
             }
           },
           "parameters": {
@@ -198,8 +235,8 @@
                   "metadata": {
                     "_generator": {
                       "name": "bicep",
-                      "version": "0.42.1.51946",
-                      "templateHash": "10683038694631124574"
+                      "version": "0.39.26.7824",
+                      "templateHash": "13422177602965420766"
                     }
                   },
                   "parameters": {
@@ -284,8 +321,8 @@
                   "metadata": {
                     "_generator": {
                       "name": "bicep",
-                      "version": "0.42.1.51946",
-                      "templateHash": "14461688292373700873"
+                      "version": "0.39.26.7824",
+                      "templateHash": "1595970866450721016"
                     }
                   },
                   "parameters": {
@@ -361,7 +398,7 @@
                       "condition": "[not(empty(parameters('workspaceId')))]",
                       "type": "Microsoft.Insights/diagnosticSettings",
                       "apiVersion": "2021-05-01-preview",
-                      "scope": "[resourceId('Microsoft.ContainerRegistry/registries', parameters('name'))]",
+                      "scope": "[format('Microsoft.ContainerRegistry/registries/{0}', parameters('name'))]",
                       "name": "registry-diagnostics",
                       "properties": {
                         "workspaceId": "[parameters('workspaceId')]",
@@ -423,15 +460,15 @@
         }
       },
       "dependsOn": [
-        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-rg', parameters('name'))), 'Microsoft.Resources/deployments', 'monitoring')]",
-        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', format('{0}-rg', parameters('name')))]"
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('targetResourceGroupName')), 'Microsoft.Resources/deployments', 'monitoring')]",
+        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', variables('targetResourceGroupName'))]"
       ]
     },
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2025-04-01",
       "name": "proxy",
-      "resourceGroup": "[format('{0}-rg', parameters('name'))]",
+      "resourceGroup": "[variables('targetResourceGroupName')]",
       "properties": {
         "expressionEvaluationOptions": {
           "scope": "inner"
@@ -451,25 +488,25 @@
             "value": "[format('{0}-id-proxy', variables('prefix'))]"
           },
           "containerAppsEnvironmentName": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-rg', parameters('name'))), 'Microsoft.Resources/deployments', 'container-apps'), '2025-04-01').outputs.environmentName.value]"
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('targetResourceGroupName')), 'Microsoft.Resources/deployments', 'container-apps'), '2025-04-01').outputs.environmentName.value]"
           },
           "containerRegistryName": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-rg', parameters('name'))), 'Microsoft.Resources/deployments', 'container-apps'), '2025-04-01').outputs.registryName.value]"
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('targetResourceGroupName')), 'Microsoft.Resources/deployments', 'container-apps'), '2025-04-01').outputs.registryName.value]"
           },
           "exists": {
             "value": "[parameters('proxyAppExists')]"
           },
           "storageAccountName": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-rg', parameters('name'))), 'Microsoft.Resources/deployments', 'storage-account'), '2025-04-01').outputs.name.value]"
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('targetResourceGroupName')), 'Microsoft.Resources/deployments', 'storage-account'), '2025-04-01').outputs.name.value]"
           },
           "encryptionKey": {
             "value": "[parameters('encryptionKey')]"
           },
           "registrationUrl": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-rg', parameters('name'))), 'Microsoft.Resources/deployments', 'registration'), '2025-04-01').outputs.SERVICE_WEB_URI.value]"
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('targetResourceGroupName')), 'Microsoft.Resources/deployments', 'registration'), '2025-04-01').outputs.SERVICE_WEB_URI.value]"
           },
           "appInsightsConnectionString": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-rg', parameters('name'))), 'Microsoft.Resources/deployments', 'monitoring'), '2025-04-01').outputs.applicationInsightsConnectionString.value]"
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('targetResourceGroupName')), 'Microsoft.Resources/deployments', 'monitoring'), '2025-04-01').outputs.applicationInsightsConnectionString.value]"
           }
         },
         "template": {
@@ -478,8 +515,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.42.1.51946",
-              "templateHash": "4466748364948598300"
+              "version": "0.39.26.7824",
+              "templateHash": "16798837107048253510"
             }
           },
           "parameters": {
@@ -657,8 +694,8 @@
                   "metadata": {
                     "_generator": {
                       "name": "bicep",
-                      "version": "0.42.1.51946",
-                      "templateHash": "9130796823397059715"
+                      "version": "0.39.26.7824",
+                      "templateHash": "11337645242368981028"
                     }
                   },
                   "parameters": {
@@ -867,8 +904,8 @@
                           "metadata": {
                             "_generator": {
                               "name": "bicep",
-                              "version": "0.42.1.51946",
-                              "templateHash": "3188204690308770392"
+                              "version": "0.39.26.7824",
+                              "templateHash": "3888138401099070405"
                             }
                           },
                           "parameters": {
@@ -1069,8 +1106,8 @@
                                   "metadata": {
                                     "_generator": {
                                       "name": "bicep",
-                                      "version": "0.42.1.51946",
-                                      "templateHash": "14268302308268557728"
+                                      "version": "0.39.26.7824",
+                                      "templateHash": "13987273330359941270"
                                     }
                                   },
                                   "parameters": {
@@ -1088,7 +1125,7 @@
                                     {
                                       "type": "Microsoft.Authorization/roleAssignments",
                                       "apiVersion": "2022-04-01",
-                                      "scope": "[resourceId('Microsoft.ContainerRegistry/registries', parameters('containerRegistryName'))]",
+                                      "scope": "[format('Microsoft.ContainerRegistry/registries/{0}', parameters('containerRegistryName'))]",
                                       "name": "[guid(subscription().id, resourceGroup().id, parameters('principalId'), variables('acrPullRole'))]",
                                       "properties": {
                                         "roleDefinitionId": "[variables('acrPullRole')]",
@@ -1181,18 +1218,18 @@
         }
       },
       "dependsOn": [
-        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-rg', parameters('name'))), 'Microsoft.Resources/deployments', 'container-apps')]",
-        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-rg', parameters('name'))), 'Microsoft.Resources/deployments', 'monitoring')]",
-        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-rg', parameters('name'))), 'Microsoft.Resources/deployments', 'registration')]",
-        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', format('{0}-rg', parameters('name')))]",
-        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-rg', parameters('name'))), 'Microsoft.Resources/deployments', 'storage-account')]"
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('targetResourceGroupName')), 'Microsoft.Resources/deployments', 'container-apps')]",
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('targetResourceGroupName')), 'Microsoft.Resources/deployments', 'monitoring')]",
+        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', variables('targetResourceGroupName'))]",
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('targetResourceGroupName')), 'Microsoft.Resources/deployments', 'registration')]",
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('targetResourceGroupName')), 'Microsoft.Resources/deployments', 'storage-account')]"
       ]
     },
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2025-04-01",
       "name": "admin",
-      "resourceGroup": "[format('{0}-rg', parameters('name'))]",
+      "resourceGroup": "[variables('targetResourceGroupName')]",
       "properties": {
         "expressionEvaluationOptions": {
           "scope": "inner"
@@ -1212,25 +1249,25 @@
             "value": "[format('{0}-id-admin', variables('prefix'))]"
           },
           "containerAppsEnvironmentName": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-rg', parameters('name'))), 'Microsoft.Resources/deployments', 'container-apps'), '2025-04-01').outputs.environmentName.value]"
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('targetResourceGroupName')), 'Microsoft.Resources/deployments', 'container-apps'), '2025-04-01').outputs.environmentName.value]"
           },
           "containerRegistryName": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-rg', parameters('name'))), 'Microsoft.Resources/deployments', 'container-apps'), '2025-04-01').outputs.registryName.value]"
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('targetResourceGroupName')), 'Microsoft.Resources/deployments', 'container-apps'), '2025-04-01').outputs.registryName.value]"
           },
           "exists": {
             "value": "[parameters('adminAppExists')]"
           },
           "storageAccountName": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-rg', parameters('name'))), 'Microsoft.Resources/deployments', 'storage-account'), '2025-04-01').outputs.name.value]"
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('targetResourceGroupName')), 'Microsoft.Resources/deployments', 'storage-account'), '2025-04-01').outputs.name.value]"
           },
           "encryptionKey": {
             "value": "[parameters('encryptionKey')]"
           },
           "registrationUrl": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-rg', parameters('name'))), 'Microsoft.Resources/deployments', 'registration'), '2025-04-01').outputs.SERVICE_WEB_URI.value]"
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('targetResourceGroupName')), 'Microsoft.Resources/deployments', 'registration'), '2025-04-01').outputs.SERVICE_WEB_URI.value]"
           },
           "proxyInternalUrl": {
-            "value": "[format('https://{0}.internal.{1}', reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-rg', parameters('name'))), 'Microsoft.Resources/deployments', 'proxy'), '2025-04-01').outputs.SERVICE_PROXY_NAME.value, reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-rg', parameters('name'))), 'Microsoft.Resources/deployments', 'container-apps'), '2025-04-01').outputs.defaultDomain.value)]"
+            "value": "[format('https://{0}.internal.{1}', reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('targetResourceGroupName')), 'Microsoft.Resources/deployments', 'proxy'), '2025-04-01').outputs.SERVICE_PROXY_NAME.value, reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('targetResourceGroupName')), 'Microsoft.Resources/deployments', 'container-apps'), '2025-04-01').outputs.defaultDomain.value)]"
           },
           "entraClientId": {
             "value": "[parameters('entraClientId')]"
@@ -1238,8 +1275,14 @@
           "entraTenantId": {
             "value": "[parameters('entraTenantId')]"
           },
+          "adminUsername": {
+            "value": "[parameters('adminUsername')]"
+          },
+          "adminPassword": {
+            "value": "[parameters('adminPassword')]"
+          },
           "appInsightsConnectionString": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-rg', parameters('name'))), 'Microsoft.Resources/deployments', 'monitoring'), '2025-04-01').outputs.applicationInsightsConnectionString.value]"
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('targetResourceGroupName')), 'Microsoft.Resources/deployments', 'monitoring'), '2025-04-01').outputs.applicationInsightsConnectionString.value]"
           }
         },
         "template": {
@@ -1248,8 +1291,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.42.1.51946",
-              "templateHash": "5554268225550761398"
+              "version": "0.39.26.7824",
+              "templateHash": "14093659908900063870"
             }
           },
           "parameters": {
@@ -1305,6 +1348,20 @@
             "entraTenantId": {
               "type": "string",
               "defaultValue": ""
+            },
+            "adminUsername": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Username for local password authentication. Only used when entraClientId is empty."
+              }
+            },
+            "adminPassword": {
+              "type": "securestring",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Password for local password authentication. Only used when entraClientId is empty."
+              }
             },
             "imageName": {
               "type": "string",
@@ -1384,19 +1441,10 @@
                     ]
                   },
                   "secrets": {
-                    "value": [
-                      {
-                        "name": "encryption-key",
-                        "value": "[parameters('encryptionKey')]"
-                      },
-                      {
-                        "name": "app-insights-connection-string",
-                        "value": "[parameters('appInsightsConnectionString')]"
-                      }
-                    ]
+                    "value": "[flatten(createArray(createArray(createObject('name', 'encryption-key', 'value', parameters('encryptionKey')), createObject('name', 'app-insights-connection-string', 'value', parameters('appInsightsConnectionString'))), if(and(empty(parameters('entraClientId')), not(empty(parameters('adminPassword')))), createArray(createObject('name', 'admin-password', 'value', parameters('adminPassword'))), createArray())))]"
                   },
                   "env": {
-                    "value": "[flatten(createArray(createArray(createObject('name', 'EncryptionKey', 'secretRef', 'encryption-key'), createObject('name', 'AZURE_CLIENT_ID', 'value', reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('identityName')), '2023-01-31').clientId), createObject('name', 'StorageAccountName', 'value', parameters('storageAccountName')), createObject('name', 'APPLICATIONINSIGHTS_CONNECTION_STRING', 'secretRef', 'app-insights-connection-string'), createObject('name', 'ASPNETCORE_FORWARDEDHEADERS_ENABLED', 'value', 'true'), createObject('name', 'RegistrationUrl', 'value', parameters('registrationUrl')), createObject('name', 'ProxyInternalUrl', 'value', parameters('proxyInternalUrl'))), if(not(empty(parameters('entraClientId'))), createArray(createObject('name', 'AzureAd__Instance', 'value', environment().authentication.loginEndpoint), createObject('name', 'AzureAd__TenantId', 'value', parameters('entraTenantId')), createObject('name', 'AzureAd__ClientId', 'value', parameters('entraClientId')), createObject('name', 'AzureAd__CallbackPath', 'value', '/signin-oidc')), createArray())))]"
+                    "value": "[flatten(createArray(createArray(createObject('name', 'EncryptionKey', 'secretRef', 'encryption-key'), createObject('name', 'AZURE_CLIENT_ID', 'value', reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', parameters('identityName')), '2023-01-31').clientId), createObject('name', 'StorageAccountName', 'value', parameters('storageAccountName')), createObject('name', 'APPLICATIONINSIGHTS_CONNECTION_STRING', 'secretRef', 'app-insights-connection-string'), createObject('name', 'ASPNETCORE_FORWARDEDHEADERS_ENABLED', 'value', 'true'), createObject('name', 'RegistrationUrl', 'value', parameters('registrationUrl')), createObject('name', 'ProxyInternalUrl', 'value', parameters('proxyInternalUrl'))), if(not(empty(parameters('entraClientId'))), createArray(createObject('name', 'AzureAd__Instance', 'value', environment().authentication.loginEndpoint), createObject('name', 'AzureAd__TenantId', 'value', parameters('entraTenantId')), createObject('name', 'AzureAd__ClientId', 'value', parameters('entraClientId')), createObject('name', 'AzureAd__CallbackPath', 'value', '/signin-oidc')), createArray(createObject('name', 'Admin__Username', 'value', parameters('adminUsername')), createObject('name', 'Admin__Password', 'secretRef', 'admin-password')))))]"
                   }
                 },
                 "template": {
@@ -1405,8 +1453,8 @@
                   "metadata": {
                     "_generator": {
                       "name": "bicep",
-                      "version": "0.42.1.51946",
-                      "templateHash": "9130796823397059715"
+                      "version": "0.39.26.7824",
+                      "templateHash": "11337645242368981028"
                     }
                   },
                   "parameters": {
@@ -1615,8 +1663,8 @@
                           "metadata": {
                             "_generator": {
                               "name": "bicep",
-                              "version": "0.42.1.51946",
-                              "templateHash": "3188204690308770392"
+                              "version": "0.39.26.7824",
+                              "templateHash": "3888138401099070405"
                             }
                           },
                           "parameters": {
@@ -1817,8 +1865,8 @@
                                   "metadata": {
                                     "_generator": {
                                       "name": "bicep",
-                                      "version": "0.42.1.51946",
-                                      "templateHash": "14268302308268557728"
+                                      "version": "0.39.26.7824",
+                                      "templateHash": "13987273330359941270"
                                     }
                                   },
                                   "parameters": {
@@ -1836,7 +1884,7 @@
                                     {
                                       "type": "Microsoft.Authorization/roleAssignments",
                                       "apiVersion": "2022-04-01",
-                                      "scope": "[resourceId('Microsoft.ContainerRegistry/registries', parameters('containerRegistryName'))]",
+                                      "scope": "[format('Microsoft.ContainerRegistry/registries/{0}', parameters('containerRegistryName'))]",
                                       "name": "[guid(subscription().id, resourceGroup().id, parameters('principalId'), variables('acrPullRole'))]",
                                       "properties": {
                                         "roleDefinitionId": "[variables('acrPullRole')]",
@@ -1925,19 +1973,19 @@
         }
       },
       "dependsOn": [
-        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-rg', parameters('name'))), 'Microsoft.Resources/deployments', 'container-apps')]",
-        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-rg', parameters('name'))), 'Microsoft.Resources/deployments', 'monitoring')]",
-        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-rg', parameters('name'))), 'Microsoft.Resources/deployments', 'proxy')]",
-        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-rg', parameters('name'))), 'Microsoft.Resources/deployments', 'registration')]",
-        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', format('{0}-rg', parameters('name')))]",
-        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-rg', parameters('name'))), 'Microsoft.Resources/deployments', 'storage-account')]"
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('targetResourceGroupName')), 'Microsoft.Resources/deployments', 'container-apps')]",
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('targetResourceGroupName')), 'Microsoft.Resources/deployments', 'monitoring')]",
+        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', variables('targetResourceGroupName'))]",
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('targetResourceGroupName')), 'Microsoft.Resources/deployments', 'proxy')]",
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('targetResourceGroupName')), 'Microsoft.Resources/deployments', 'registration')]",
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('targetResourceGroupName')), 'Microsoft.Resources/deployments', 'storage-account')]"
       ]
     },
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2025-04-01",
       "name": "storage-account",
-      "resourceGroup": "[format('{0}-rg', parameters('name'))]",
+      "resourceGroup": "[variables('targetResourceGroupName')]",
       "properties": {
         "expressionEvaluationOptions": {
           "scope": "inner"
@@ -1960,8 +2008,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.42.1.51946",
-              "templateHash": "13779452115465493095"
+              "version": "0.39.26.7824",
+              "templateHash": "7638923182571624398"
             }
           },
           "parameters": {
@@ -2021,12 +2069,12 @@
               "type": "object",
               "defaultValue": {
                 "bypass": "AzureServices",
-                "defaultAction": "Deny"
+                "defaultAction": "Allow"
               }
             },
             "publicNetworkAccess": {
               "type": "string",
-              "defaultValue": "Disabled",
+              "defaultValue": "Enabled",
               "allowedValues": [
                 "Enabled",
                 "Disabled"
@@ -2082,14 +2130,14 @@
         }
       },
       "dependsOn": [
-        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', format('{0}-rg', parameters('name')))]"
+        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', variables('targetResourceGroupName'))]"
       ]
     },
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2025-04-01",
       "name": "storage-role-proxy",
-      "resourceGroup": "[format('{0}-rg', parameters('name'))]",
+      "resourceGroup": "[variables('targetResourceGroupName')]",
       "properties": {
         "expressionEvaluationOptions": {
           "scope": "inner"
@@ -2097,10 +2145,10 @@
         "mode": "Incremental",
         "parameters": {
           "storageAccountName": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-rg', parameters('name'))), 'Microsoft.Resources/deployments', 'storage-account'), '2025-04-01').outputs.name.value]"
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('targetResourceGroupName')), 'Microsoft.Resources/deployments', 'storage-account'), '2025-04-01').outputs.name.value]"
           },
           "principalId": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-rg', parameters('name'))), 'Microsoft.Resources/deployments', 'proxy'), '2025-04-01').outputs.SERVICE_PROXY_IDENTITY_PRINCIPAL_ID.value]"
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('targetResourceGroupName')), 'Microsoft.Resources/deployments', 'proxy'), '2025-04-01').outputs.SERVICE_PROXY_IDENTITY_PRINCIPAL_ID.value]"
           },
           "roleDefinitionId": {
             "value": "0a9a7e1f-b9d0-4cc4-a60d-0319b160aaa3"
@@ -2115,8 +2163,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.42.1.51946",
-              "templateHash": "13146500908004644016"
+              "version": "0.39.26.7824",
+              "templateHash": "6663304685346829671"
             }
           },
           "parameters": {
@@ -2145,7 +2193,7 @@
             {
               "type": "Microsoft.Authorization/roleAssignments",
               "apiVersion": "2022-04-01",
-              "scope": "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]",
+              "scope": "[format('Microsoft.Storage/storageAccounts/{0}', parameters('storageAccountName'))]",
               "name": "[guid(resourceGroup().id, parameters('storageAccountName'), parameters('principalId'), parameters('roleDefinitionId'))]",
               "properties": {
                 "principalId": "[parameters('principalId')]",
@@ -2157,16 +2205,16 @@
         }
       },
       "dependsOn": [
-        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-rg', parameters('name'))), 'Microsoft.Resources/deployments', 'proxy')]",
-        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', format('{0}-rg', parameters('name')))]",
-        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-rg', parameters('name'))), 'Microsoft.Resources/deployments', 'storage-account')]"
+        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', variables('targetResourceGroupName'))]",
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('targetResourceGroupName')), 'Microsoft.Resources/deployments', 'proxy')]",
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('targetResourceGroupName')), 'Microsoft.Resources/deployments', 'storage-account')]"
       ]
     },
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2025-04-01",
       "name": "storage-role-admin",
-      "resourceGroup": "[format('{0}-rg', parameters('name'))]",
+      "resourceGroup": "[variables('targetResourceGroupName')]",
       "properties": {
         "expressionEvaluationOptions": {
           "scope": "inner"
@@ -2174,10 +2222,10 @@
         "mode": "Incremental",
         "parameters": {
           "storageAccountName": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-rg', parameters('name'))), 'Microsoft.Resources/deployments', 'storage-account'), '2025-04-01').outputs.name.value]"
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('targetResourceGroupName')), 'Microsoft.Resources/deployments', 'storage-account'), '2025-04-01').outputs.name.value]"
           },
           "principalId": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-rg', parameters('name'))), 'Microsoft.Resources/deployments', 'admin'), '2025-04-01').outputs.SERVICE_ADMIN_IDENTITY_PRINCIPAL_ID.value]"
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('targetResourceGroupName')), 'Microsoft.Resources/deployments', 'admin'), '2025-04-01').outputs.SERVICE_ADMIN_IDENTITY_PRINCIPAL_ID.value]"
           },
           "roleDefinitionId": {
             "value": "0a9a7e1f-b9d0-4cc4-a60d-0319b160aaa3"
@@ -2192,8 +2240,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.42.1.51946",
-              "templateHash": "13146500908004644016"
+              "version": "0.39.26.7824",
+              "templateHash": "6663304685346829671"
             }
           },
           "parameters": {
@@ -2222,7 +2270,7 @@
             {
               "type": "Microsoft.Authorization/roleAssignments",
               "apiVersion": "2022-04-01",
-              "scope": "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]",
+              "scope": "[format('Microsoft.Storage/storageAccounts/{0}', parameters('storageAccountName'))]",
               "name": "[guid(resourceGroup().id, parameters('storageAccountName'), parameters('principalId'), parameters('roleDefinitionId'))]",
               "properties": {
                 "principalId": "[parameters('principalId')]",
@@ -2234,16 +2282,16 @@
         }
       },
       "dependsOn": [
-        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-rg', parameters('name'))), 'Microsoft.Resources/deployments', 'admin')]",
-        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', format('{0}-rg', parameters('name')))]",
-        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-rg', parameters('name'))), 'Microsoft.Resources/deployments', 'storage-account')]"
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('targetResourceGroupName')), 'Microsoft.Resources/deployments', 'admin')]",
+        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', variables('targetResourceGroupName'))]",
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('targetResourceGroupName')), 'Microsoft.Resources/deployments', 'storage-account')]"
       ]
     },
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2025-04-01",
       "name": "registration",
-      "resourceGroup": "[format('{0}-rg', parameters('name'))]",
+      "resourceGroup": "[variables('targetResourceGroupName')]",
       "properties": {
         "expressionEvaluationOptions": {
           "scope": "inner"
@@ -2266,8 +2314,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.42.1.51946",
-              "templateHash": "16509767097805465423"
+              "version": "0.39.26.7824",
+              "templateHash": "17815894382505973436"
             }
           },
           "parameters": {
@@ -2320,8 +2368,8 @@
                   "metadata": {
                     "_generator": {
                       "name": "bicep",
-                      "version": "0.42.1.51946",
-                      "templateHash": "5565998824649371439"
+                      "version": "0.39.26.7824",
+                      "templateHash": "5739747379396524525"
                     }
                   },
                   "parameters": {
@@ -2384,14 +2432,14 @@
         }
       },
       "dependsOn": [
-        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', format('{0}-rg', parameters('name')))]"
+        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', variables('targetResourceGroupName'))]"
       ]
     },
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2025-04-01",
       "name": "frontend-link-dotnet",
-      "resourceGroup": "[format('{0}-rg', parameters('name'))]",
+      "resourceGroup": "[variables('targetResourceGroupName')]",
       "properties": {
         "expressionEvaluationOptions": {
           "scope": "inner"
@@ -2399,10 +2447,10 @@
         "mode": "Incremental",
         "parameters": {
           "swaAppName": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-rg', parameters('name'))), 'Microsoft.Resources/deployments', 'registration'), '2025-04-01').outputs.SERVICE_WEB_NAME.value]"
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('targetResourceGroupName')), 'Microsoft.Resources/deployments', 'registration'), '2025-04-01').outputs.SERVICE_WEB_NAME.value]"
           },
           "backendAppName": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-rg', parameters('name'))), 'Microsoft.Resources/deployments', 'proxy'), '2025-04-01').outputs.SERVICE_PROXY_NAME.value]"
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('targetResourceGroupName')), 'Microsoft.Resources/deployments', 'proxy'), '2025-04-01').outputs.SERVICE_PROXY_NAME.value]"
           }
         },
         "template": {
@@ -2411,8 +2459,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.42.1.51946",
-              "templateHash": "9378553592093292492"
+              "version": "0.39.26.7824",
+              "templateHash": "568531032675373439"
             }
           },
           "parameters": {
@@ -2461,16 +2509,16 @@
         }
       },
       "dependsOn": [
-        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-rg', parameters('name'))), 'Microsoft.Resources/deployments', 'proxy')]",
-        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-rg', parameters('name'))), 'Microsoft.Resources/deployments', 'registration')]",
-        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', format('{0}-rg', parameters('name')))]"
+        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', variables('targetResourceGroupName'))]",
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('targetResourceGroupName')), 'Microsoft.Resources/deployments', 'proxy')]",
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('targetResourceGroupName')), 'Microsoft.Resources/deployments', 'registration')]"
       ]
     },
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2025-04-01",
       "name": "foundry",
-      "resourceGroup": "[format('{0}-rg', parameters('name'))]",
+      "resourceGroup": "[variables('targetResourceGroupName')]",
       "properties": {
         "expressionEvaluationOptions": {
           "scope": "inner"
@@ -2487,7 +2535,13 @@
             "value": "[variables('tags')]"
           },
           "proxyPrincipalId": {
-            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-rg', parameters('name'))), 'Microsoft.Resources/deployments', 'proxy'), '2025-04-01').outputs.SERVICE_PROXY_IDENTITY_PRINCIPAL_ID.value]"
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('targetResourceGroupName')), 'Microsoft.Resources/deployments', 'proxy'), '2025-04-01').outputs.SERVICE_PROXY_IDENTITY_PRINCIPAL_ID.value]"
+          },
+          "logAnalyticsWorkspaceId": {
+            "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('targetResourceGroupName')), 'Microsoft.Resources/deployments', 'monitoring'), '2025-04-01').outputs.logAnalyticsWorkspaceId.value]"
+          },
+          "accountName": {
+            "value": "[parameters('foundryAccountName')]"
           }
         },
         "template": {
@@ -2496,8 +2550,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.42.1.51946",
-              "templateHash": "6106855315238716465"
+              "version": "0.39.26.7824",
+              "templateHash": "15777707499948516743"
             }
           },
           "parameters": {
@@ -2517,13 +2571,30 @@
               "metadata": {
                 "description": "Principal ID of the proxy user-assigned managed identity for ACR pull"
               }
+            },
+            "logAnalyticsWorkspaceId": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Resource ID of the Log Analytics workspace that receives model usage logs and metrics."
+              }
+            },
+            "accountName": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Explicit name for the AI Foundry account. Defaults to the hash-based \"<prefix>-aifoundry\" convention when empty. Must be globally unique because it also becomes the custom subdomain."
+              }
             }
+          },
+          "variables": {
+            "foundryName": "[if(empty(parameters('accountName')), format('{0}-aifoundry', parameters('name')), parameters('accountName'))]"
           },
           "resources": [
             {
               "type": "Microsoft.CognitiveServices/accounts",
               "apiVersion": "2025-04-01-preview",
-              "name": "[format('{0}-aifoundry', parameters('name'))]",
+              "name": "[variables('foundryName')]",
               "location": "[parameters('location')]",
               "tags": "[parameters('tags')]",
               "kind": "AIServices",
@@ -2531,7 +2602,7 @@
                 "type": "SystemAssigned"
               },
               "properties": {
-                "customSubDomainName": "[format('{0}-aifoundry', parameters('name'))]",
+                "customSubDomainName": "[variables('foundryName')]",
                 "publicNetworkAccess": "Enabled",
                 "allowProjectManagement": true
               },
@@ -2542,7 +2613,7 @@
             {
               "type": "Microsoft.CognitiveServices/accounts/projects",
               "apiVersion": "2025-04-01-preview",
-              "name": "[format('{0}/{1}', format('{0}-aifoundry', parameters('name')), format('{0}-aifoundry-project', parameters('name')))]",
+              "name": "[format('{0}/{1}', variables('foundryName'), format('{0}-project', variables('foundryName')))]",
               "location": "[parameters('location')]",
               "tags": "[parameters('tags')]",
               "identity": {
@@ -2550,50 +2621,84 @@
               },
               "properties": {},
               "dependsOn": [
-                "[resourceId('Microsoft.CognitiveServices/accounts', format('{0}-aifoundry', parameters('name')))]"
+                "[resourceId('Microsoft.CognitiveServices/accounts', variables('foundryName'))]"
+              ]
+            },
+            {
+              "condition": "[not(empty(parameters('logAnalyticsWorkspaceId')))]",
+              "type": "Microsoft.Insights/diagnosticSettings",
+              "apiVersion": "2021-05-01-preview",
+              "scope": "[format('Microsoft.CognitiveServices/accounts/{0}', variables('foundryName'))]",
+              "name": "foundry-usage",
+              "properties": {
+                "workspaceId": "[parameters('logAnalyticsWorkspaceId')]",
+                "logs": [
+                  {
+                    "category": "AzureOpenAIRequestUsage",
+                    "enabled": true
+                  },
+                  {
+                    "category": "RequestResponse",
+                    "enabled": true
+                  },
+                  {
+                    "category": "Audit",
+                    "enabled": true
+                  }
+                ],
+                "metrics": [
+                  {
+                    "category": "AllMetrics",
+                    "enabled": true
+                  }
+                ]
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.CognitiveServices/accounts', variables('foundryName'))]"
               ]
             },
             {
               "type": "Microsoft.Authorization/roleAssignments",
               "apiVersion": "2022-04-01",
-              "scope": "[resourceId('Microsoft.CognitiveServices/accounts', format('{0}-aifoundry', parameters('name')))]",
-              "name": "[guid(resourceId('Microsoft.CognitiveServices/accounts', format('{0}-aifoundry', parameters('name'))), parameters('proxyPrincipalId'), '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd')]",
+              "scope": "[format('Microsoft.CognitiveServices/accounts/{0}', variables('foundryName'))]",
+              "name": "[guid(resourceId('Microsoft.CognitiveServices/accounts', variables('foundryName')), parameters('proxyPrincipalId'), '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd')]",
               "properties": {
                 "principalId": "[parameters('proxyPrincipalId')]",
                 "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd')]",
                 "principalType": "ServicePrincipal"
               },
               "dependsOn": [
-                "[resourceId('Microsoft.CognitiveServices/accounts', format('{0}-aifoundry', parameters('name')))]"
+                "[resourceId('Microsoft.CognitiveServices/accounts', variables('foundryName'))]"
               ]
             }
           ],
           "outputs": {
             "aiServicesName": {
               "type": "string",
-              "value": "[format('{0}-aifoundry', parameters('name'))]"
+              "value": "[variables('foundryName')]"
             },
             "aiServicesEndpoint": {
               "type": "string",
-              "value": "[reference(resourceId('Microsoft.CognitiveServices/accounts', format('{0}-aifoundry', parameters('name'))), '2025-04-01-preview').endpoint]"
+              "value": "[reference(resourceId('Microsoft.CognitiveServices/accounts', variables('foundryName')), '2025-04-01-preview').endpoint]"
             },
             "aiProjectName": {
               "type": "string",
-              "value": "[format('{0}-aifoundry-project', parameters('name'))]"
+              "value": "[format('{0}-project', variables('foundryName'))]"
             }
           }
         }
       },
       "dependsOn": [
-        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-rg', parameters('name'))), 'Microsoft.Resources/deployments', 'proxy')]",
-        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', format('{0}-rg', parameters('name')))]"
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('targetResourceGroupName')), 'Microsoft.Resources/deployments', 'monitoring')]",
+        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', variables('targetResourceGroupName'))]",
+        "[extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('targetResourceGroupName')), 'Microsoft.Resources/deployments', 'proxy')]"
       ]
     },
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2025-04-01",
       "name": "monitoring",
-      "resourceGroup": "[format('{0}-rg', parameters('name'))]",
+      "resourceGroup": "[variables('targetResourceGroupName')]",
       "properties": {
         "expressionEvaluationOptions": {
           "scope": "inner"
@@ -2622,8 +2727,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.42.1.51946",
-              "templateHash": "4910783488198633089"
+              "version": "0.39.26.7824",
+              "templateHash": "9530782380150971806"
             }
           },
           "parameters": {
@@ -2672,8 +2777,8 @@
                   "metadata": {
                     "_generator": {
                       "name": "bicep",
-                      "version": "0.42.1.51946",
-                      "templateHash": "6121780006539762155"
+                      "version": "0.39.26.7824",
+                      "templateHash": "701346818523970171"
                     }
                   },
                   "parameters": {
@@ -2752,8 +2857,8 @@
                   "metadata": {
                     "_generator": {
                       "name": "bicep",
-                      "version": "0.42.1.51946",
-                      "templateHash": "10458501730527804560"
+                      "version": "0.39.26.7824",
+                      "templateHash": "5953710800229989816"
                     }
                   },
                   "parameters": {
@@ -2814,8 +2919,8 @@
                           "metadata": {
                             "_generator": {
                               "name": "bicep",
-                              "version": "0.42.1.51946",
-                              "templateHash": "12533291905721617654"
+                              "version": "0.39.26.7824",
+                              "templateHash": "14532348577945871377"
                             }
                           },
                           "parameters": {
@@ -4096,7 +4201,7 @@
         }
       },
       "dependsOn": [
-        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', format('{0}-rg', parameters('name')))]"
+        "[subscriptionResourceId('Microsoft.Resources/resourceGroups', variables('targetResourceGroupName'))]"
       ]
     }
   ],
@@ -4105,65 +4210,69 @@
       "type": "string",
       "value": "[parameters('location')]"
     },
+    "AZURE_RESOURCE_GROUP": {
+      "type": "string",
+      "value": "[variables('targetResourceGroupName')]"
+    },
     "AZURE_CONTAINER_ENVIRONMENT_NAME": {
       "type": "string",
-      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-rg', parameters('name'))), 'Microsoft.Resources/deployments', 'container-apps'), '2025-04-01').outputs.environmentName.value]"
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('targetResourceGroupName')), 'Microsoft.Resources/deployments', 'container-apps'), '2025-04-01').outputs.environmentName.value]"
     },
     "AZURE_CONTAINER_REGISTRY_NAME": {
       "type": "string",
-      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-rg', parameters('name'))), 'Microsoft.Resources/deployments', 'container-apps'), '2025-04-01').outputs.registryName.value]"
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('targetResourceGroupName')), 'Microsoft.Resources/deployments', 'container-apps'), '2025-04-01').outputs.registryName.value]"
     },
     "AZURE_CONTAINER_REGISTRY_ENDPOINT": {
       "type": "string",
-      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-rg', parameters('name'))), 'Microsoft.Resources/deployments', 'container-apps'), '2025-04-01').outputs.registryLoginServer.value]"
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('targetResourceGroupName')), 'Microsoft.Resources/deployments', 'container-apps'), '2025-04-01').outputs.registryLoginServer.value]"
     },
     "SERVICE_PROXY_IDENTITY_PRINCIPAL_ID": {
       "type": "string",
-      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-rg', parameters('name'))), 'Microsoft.Resources/deployments', 'proxy'), '2025-04-01').outputs.SERVICE_PROXY_IDENTITY_PRINCIPAL_ID.value]"
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('targetResourceGroupName')), 'Microsoft.Resources/deployments', 'proxy'), '2025-04-01').outputs.SERVICE_PROXY_IDENTITY_PRINCIPAL_ID.value]"
     },
     "SERVICE_PROXY_NAME": {
       "type": "string",
-      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-rg', parameters('name'))), 'Microsoft.Resources/deployments', 'proxy'), '2025-04-01').outputs.SERVICE_PROXY_NAME.value]"
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('targetResourceGroupName')), 'Microsoft.Resources/deployments', 'proxy'), '2025-04-01').outputs.SERVICE_PROXY_NAME.value]"
     },
     "SERVICE_PROXY_URI": {
       "type": "string",
-      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-rg', parameters('name'))), 'Microsoft.Resources/deployments', 'proxy'), '2025-04-01').outputs.SERVICE_PROXY_URI.value]"
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('targetResourceGroupName')), 'Microsoft.Resources/deployments', 'proxy'), '2025-04-01').outputs.SERVICE_PROXY_URI.value]"
     },
     "SERVICE_PROXY_IMAGE_NAME": {
       "type": "string",
-      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-rg', parameters('name'))), 'Microsoft.Resources/deployments', 'proxy'), '2025-04-01').outputs.SERVICE_PROXY_IMAGE_NAME.value]"
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('targetResourceGroupName')), 'Microsoft.Resources/deployments', 'proxy'), '2025-04-01').outputs.SERVICE_PROXY_IMAGE_NAME.value]"
     },
     "SERVICE_ADMIN_NAME": {
       "type": "string",
-      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-rg', parameters('name'))), 'Microsoft.Resources/deployments', 'admin'), '2025-04-01').outputs.SERVICE_ADMIN_NAME.value]"
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('targetResourceGroupName')), 'Microsoft.Resources/deployments', 'admin'), '2025-04-01').outputs.SERVICE_ADMIN_NAME.value]"
     },
     "SERVICE_ADMIN_URI": {
       "type": "string",
-      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-rg', parameters('name'))), 'Microsoft.Resources/deployments', 'admin'), '2025-04-01').outputs.SERVICE_ADMIN_URI.value]"
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('targetResourceGroupName')), 'Microsoft.Resources/deployments', 'admin'), '2025-04-01').outputs.SERVICE_ADMIN_URI.value]"
     },
     "SERVICE_ADMIN_IMAGE_NAME": {
       "type": "string",
-      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-rg', parameters('name'))), 'Microsoft.Resources/deployments', 'admin'), '2025-04-01').outputs.SERVICE_ADMIN_IMAGE_NAME.value]"
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('targetResourceGroupName')), 'Microsoft.Resources/deployments', 'admin'), '2025-04-01').outputs.SERVICE_ADMIN_IMAGE_NAME.value]"
     },
     "SERVICE_REGISTRATION_URI": {
       "type": "string",
-      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-rg', parameters('name'))), 'Microsoft.Resources/deployments', 'registration'), '2025-04-01').outputs.SERVICE_WEB_URI.value]"
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('targetResourceGroupName')), 'Microsoft.Resources/deployments', 'registration'), '2025-04-01').outputs.SERVICE_WEB_URI.value]"
     },
     "SERVICE_STORAGE_ACCOUNT_NAME": {
       "type": "string",
-      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-rg', parameters('name'))), 'Microsoft.Resources/deployments', 'storage-account'), '2025-04-01').outputs.name.value]"
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('targetResourceGroupName')), 'Microsoft.Resources/deployments', 'storage-account'), '2025-04-01').outputs.name.value]"
     },
     "SERVICE_AI_SERVICES_NAME": {
       "type": "string",
-      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-rg', parameters('name'))), 'Microsoft.Resources/deployments', 'foundry'), '2025-04-01').outputs.aiServicesName.value]"
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('targetResourceGroupName')), 'Microsoft.Resources/deployments', 'foundry'), '2025-04-01').outputs.aiServicesName.value]"
     },
     "SERVICE_AI_SERVICES_ENDPOINT": {
       "type": "string",
-      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-rg', parameters('name'))), 'Microsoft.Resources/deployments', 'foundry'), '2025-04-01').outputs.aiServicesEndpoint.value]"
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('targetResourceGroupName')), 'Microsoft.Resources/deployments', 'foundry'), '2025-04-01').outputs.aiServicesEndpoint.value]"
     },
     "SERVICE_AI_PROJECT_NAME": {
       "type": "string",
-      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, format('{0}-rg', parameters('name'))), 'Microsoft.Resources/deployments', 'foundry'), '2025-04-01').outputs.aiProjectName.value]"
+      "value": "[reference(extensionResourceId(format('/subscriptions/{0}/resourceGroups/{1}', subscription().subscriptionId, variables('targetResourceGroupName')), 'Microsoft.Resources/deployments', 'foundry'), '2025-04-01').outputs.aiProjectName.value]"
     }
   }
 }

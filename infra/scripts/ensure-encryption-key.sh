@@ -4,7 +4,13 @@ set -euo pipefail
 
 echo "Checking azd environment for ENCRYPTION_KEY"
 
-existing_key="$(azd env get-value ENCRYPTION_KEY 2>/dev/null || true)"
+# `azd env get-value` writes its "key not found" error to stdout and exits non-zero,
+# so the exit code (not the captured text) is what tells us whether the key exists.
+if existing_key="$(azd env get-value ENCRYPTION_KEY 2>/dev/null)"; then
+    existing_key="$(printf '%s' "${existing_key}" | tr -d '\r\n"')"
+else
+    existing_key=""
+fi
 
 if [ -n "${existing_key}" ]; then
     echo "ENCRYPTION_KEY already set in azd environment"

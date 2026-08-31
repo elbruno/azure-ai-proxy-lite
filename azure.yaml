@@ -9,7 +9,7 @@ services:
     docker:
       path: ../Dockerfile.proxy
       context: ../
-      platform: amd64
+      platform: linux/amd64
 
   admin:
     project: ./src/AzureAIProxy.Admin
@@ -18,7 +18,7 @@ services:
     docker:
       path: ../Dockerfile.admin
       context: ../
-      platform: amd64
+      platform: linux/amd64
 
   registration:
     project: ./src/registration
