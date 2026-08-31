@@ -14,7 +14,7 @@ param encryptionKey string
 @secure()
 param appInsightsConnectionString string
 param registrationUrl string
-param defaultApiVersion string = '2025-01-01-preview'
+param defaultApiVersion string = '2025-04-01-preview'
 param imageName string = ''
 param keyVaultName string = ''
 

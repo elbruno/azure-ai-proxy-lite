@@ -14,6 +14,7 @@ nav:
   - Reporting: reporting.md
   - Capacity: capacity.md
   - Foundry Toolkit: foundry_toolkit.md
+  - GitHub Copilot App: github_copilot_app.md
   - Developers: developers.md
   - Security Architecture: security_architecture.md
   - Workshops: workshops.md

@@ -5,6 +5,7 @@ using AzureAIProxy.Services;
 using AzureAIProxy.Shared.Database;
 using AzureAIProxy.Tests.TestDoubles;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace AzureAIProxy.Tests.Proxy;
@@ -20,7 +21,8 @@ public class ProxyServiceBehaviorTests
         var service = new ProxyService(
             new StubHttpClientFactory(new HttpClient(handler)),
             new NoopMetricService(),
-            NullLogger<ProxyService>.Instance);
+            NullLogger<ProxyService>.Instance,
+            new ConfigurationBuilder().Build());
 
         var deployment = TestData.CreateDeployment(ModelType.Foundry_Model.ToStorageString(), useManagedIdentity: false, endpointKey: "secret-key");
 
@@ -39,7 +41,8 @@ public class ProxyServiceBehaviorTests
         var service = new ProxyService(
             new StubHttpClientFactory(new HttpClient(handler)),
             new NoopMetricService(),
-            NullLogger<ProxyService>.Instance);
+            NullLogger<ProxyService>.Instance,
+            new ConfigurationBuilder().Build());
 
         var deployment = TestData.CreateDeployment(ModelType.Foundry_Model.ToStorageString(), useManagedIdentity: false, endpointKey: "bearer-token");
 
@@ -60,7 +63,8 @@ public class ProxyServiceBehaviorTests
         var service = new ProxyService(
             new StubHttpClientFactory(httpClient),
             metricService,
-            NullLogger<ProxyService>.Instance);
+            NullLogger<ProxyService>.Instance,
+            new ConfigurationBuilder().Build());
 
         var deployment = TestData.CreateDeployment(ModelType.Foundry_Toolkit.ToStorageString(), useManagedIdentity: false);
         deployment.UseMaxCompletionTokens = true;
@@ -85,5 +89,75 @@ public class ProxyServiceBehaviorTests
         Assert.True(rewrittenBody.RootElement.TryGetProperty("max_completion_tokens", out var maxCompletionTokens));
         Assert.Equal(123, maxCompletionTokens.GetInt32());
         Assert.False(rewrittenBody.RootElement.TryGetProperty("max_tokens", out _));
+    }
+
+    [Fact]
+    public async Task HttpPostAsync_MissingApiVersion_FallsBackToConfiguredDefault()
+    {
+        var handler = new RecordingHttpMessageHandler((_, _) =>
+            Task.FromResult(TestData.JsonResponse(HttpStatusCode.OK, "{\"ok\":true}")));
+
+        var configuration = new Microsoft.Extensions.Configuration.ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?> { ["DefaultApiVersion"] = "2024-10-21" })
+            .Build();
+
+        var service = new ProxyService(
+            new StubHttpClientFactory(new HttpClient(handler)),
+            new NoopMetricService(),
+            NullLogger<ProxyService>.Instance,
+            configuration);
+
+        var deployment = TestData.CreateDeployment(ModelType.Foundry_Model.ToStorageString(), useManagedIdentity: false);
+
+        using var body = JsonDocument.Parse("{\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}]}");
+        // Simulate a client request with NO query string at all (the observed GitHub Copilot app bug).
+        var context = new DefaultHttpContext();
+
+        var (_, statusCode) = await service.HttpPostAsync(
+            new UriBuilder("https://upstream.example.com/openai/deployments/test/chat/completions"),
+            [new RequestHeader("api-key", "proxy-key")],
+            context,
+            body,
+            TestData.CreateRequestContext(),
+            deployment);
+
+        Assert.Equal(200, statusCode);
+        Assert.NotNull(handler.LastRequest);
+        Assert.Equal("api-version=2024-10-21", handler.LastRequest!.RequestUri!.Query.TrimStart('?'));
+    }
+
+    [Fact]
+    public async Task HttpPostAsync_ApiVersionAlreadyPresent_DoesNotOverrideIt()
+    {
+        var handler = new RecordingHttpMessageHandler((_, _) =>
+            Task.FromResult(TestData.JsonResponse(HttpStatusCode.OK, "{\"ok\":true}")));
+
+        var configuration = new Microsoft.Extensions.Configuration.ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?> { ["DefaultApiVersion"] = "2024-10-21" })
+            .Build();
+
+        var service = new ProxyService(
+            new StubHttpClientFactory(new HttpClient(handler)),
+            new NoopMetricService(),
+            NullLogger<ProxyService>.Instance,
+            configuration);
+
+        var deployment = TestData.CreateDeployment(ModelType.Foundry_Model.ToStorageString(), useManagedIdentity: false);
+
+        using var body = JsonDocument.Parse("{\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}]}");
+        var context = new DefaultHttpContext();
+        context.Request.QueryString = new QueryString("?api-version=2025-01-01-preview");
+
+        var (_, statusCode) = await service.HttpPostAsync(
+            new UriBuilder("https://upstream.example.com/openai/deployments/test/chat/completions"),
+            [new RequestHeader("api-key", "proxy-key")],
+            context,
+            body,
+            TestData.CreateRequestContext(),
+            deployment);
+
+        Assert.Equal(200, statusCode);
+        Assert.NotNull(handler.LastRequest);
+        Assert.Equal("api-version=2025-01-01-preview", handler.LastRequest!.RequestUri!.Query.TrimStart('?'));
     }
 }

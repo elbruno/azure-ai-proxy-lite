@@ -5,6 +5,7 @@ using AzureAIProxy.Services;
 using AzureAIProxy.Shared.Database;
 using AzureAIProxy.Tests.TestDoubles;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace AzureAIProxy.Tests.Proxy;
@@ -32,7 +33,8 @@ public class ProxyServiceFormTests
         var service = new ProxyService(
             new StubHttpClientFactory(new HttpClient(handler)),
             new NoopMetricService(),
-            NullLogger<ProxyService>.Instance);
+            NullLogger<ProxyService>.Instance,
+            new ConfigurationBuilder().Build());
 
         var deployment = TestData.CreateDeployment(
             ModelType.Foundry_Agent.ToStorageString(),
@@ -90,7 +92,8 @@ public class ProxyServiceFormTests
         var service = new ProxyService(
             new StubHttpClientFactory(new HttpClient(handler)),
             new NoopMetricService(),
-            NullLogger<ProxyService>.Instance);
+            NullLogger<ProxyService>.Instance,
+            new ConfigurationBuilder().Build());
 
         var deployment = TestData.CreateDeployment(
             ModelType.Foundry_Agent.ToStorageString());

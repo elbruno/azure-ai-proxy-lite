@@ -14,7 +14,7 @@ namespace AzureAIProxy.Services;
 /// <summary>
 /// Provides methods for sending HTTP requests (GET, POST, DELETE) to specified URLs with support for various content types and query parameters.
 /// </summary>
-public class ProxyService(IHttpClientFactory httpClientFactory, IMetricService metricService, ILogger<ProxyService> logger)
+public class ProxyService(IHttpClientFactory httpClientFactory, IMetricService metricService, ILogger<ProxyService> logger, IConfiguration configuration)
     : IProxyService
 {
     private const int HttpTimeoutSeconds = 60;
@@ -340,6 +340,19 @@ public class ProxyService(IHttpClientFactory httpClientFactory, IMetricService m
             var existing = requestUrl.Query.TrimStart('?');
             if (!string.IsNullOrEmpty(existing))
                 queryParameters.Insert(0, existing);
+        }
+
+        // Some clients (e.g. the GitHub Copilot desktop app) omit the mandatory
+        // Azure OpenAI "api-version" query parameter on some requests, which Azure
+        // rejects with a misleading 404 "Resource not found" instead of a 400.
+        // Fall back to a configured default so those requests still succeed.
+        bool hasApiVersion = queryParameters.Any(p =>
+            p.StartsWith("api-version=", StringComparison.OrdinalIgnoreCase));
+        if (!hasApiVersion)
+        {
+            var defaultApiVersion = configuration["DefaultApiVersion"];
+            if (!string.IsNullOrEmpty(defaultApiVersion))
+                queryParameters.Add($"api-version={Uri.EscapeDataString(defaultApiVersion)}");
         }
 
         requestUrl.Query = string.Join("&", queryParameters);
