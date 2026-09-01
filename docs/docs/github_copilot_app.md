@@ -28,6 +28,9 @@ adding:
 
 1. Open the GitHub Copilot app → **Settings** (`Ctrl+,` / `Cmd+,`) → **Model providers**.
 1. Select **+ Add provider** → **Custom endpoint**.
+
+    ![Add a custom endpoint provider in the GitHub Copilot app](./media/github-copilot-app-add-provider.png)
+
 1. Fill in the form:
 
     | Field | Value |
@@ -49,6 +52,8 @@ adding:
     This prompt cap leaves room for Copilot's MCP servers, tools, and instructions while keeping
     requests under a typical 100K TPM Azure OpenAI deployment quota. Event organizers can raise or
     lower it based on the backing deployment's TPM headroom and expected concurrent attendees.
+
+    ![Configure model token limits in the GitHub Copilot app](./media/github-copilot-app-model-token-settings.png)
 1. Start a new chat, pick your provider/model from the model picker, and send a message. After
    changing provider or model settings, open another new chat so Copilot uses the saved values.
 
@@ -65,6 +70,8 @@ adding:
     | API key | Your event API key |
     | Wire API | **Responses** for GPT-5-family models |
 
+    ![Azure OpenAI provider configured with Responses](./media/github-copilot-app-azure-openai-responses.png)
+
 1. Add each deployment name you were given (e.g. `gpt-5-mini`) as a model.
 1. Start a new chat and select your model. After changing provider or model settings, open another
    new chat so Copilot uses the saved values.
@@ -80,6 +87,22 @@ adding:
 | `CAPIError: 401` | Wrong or expired event API key. | Re-copy the key from your event registration or admin portal. |
 | Model not found / not listed | The deployment name doesn't match a resource attached to your event, or the event isn't active. | Confirm the exact deployment name with the event organiser. |
 | Works once, then fails after a redeploy | The container app briefly serves the old revision while draining. | Wait ~10 seconds and retry. |
+
+## Event page quick setup
+
+The event registration page now includes the same values attendees need for the Copilot App: proxy
+Base URL, event API key, model IDs, Responses wire API, and recommended token limits.
+
+![Event registration page with GitHub Copilot App setup values](./media/github-copilot-app-event-page.png)
+
+## Single-file SDK smoke tests
+
+Use these samples after downloading the event config from the registration page and saving or
+renaming it to `.env` in the sample's working directory. The generated file includes
+`PROXY_ENDPOINT`, `PROXY_API_KEY`, and a default `MODEL_NAME`.
+
+- [Python Responses API sample](https://github.com/elbruno/azure-ai-proxy-lite/blob/main/examples/python/openai_sdk_1.x/azure_openai_responses.py)
+- [C# Microsoft.Extensions.AI Responses sample](https://github.com/elbruno/azure-ai-proxy-lite/blob/main/examples/dotnet/microsoft_extensions_ai_responses.cs)
 
 ## Lessons learned from the GitHub Copilot app validation
 

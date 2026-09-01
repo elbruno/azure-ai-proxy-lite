@@ -4,6 +4,9 @@ A managed, multi-tenant proxy that sits between workshop attendees and Azure AI 
 
 The solution documentation is published [here](https://microsoft.github.io/azure-ai-proxy-lite/).
 
+For attendees using the GitHub Copilot desktop app, see the
+[GitHub Copilot App setup guide with screenshots](docs/docs/github_copilot_app.md).
+
 > **Deploying this repo?** See [MY_DEPLOYMENT.md](MY_DEPLOYMENT.md) for the live deployment's URLs,
 > admin access model, and step-by-step testing instructions.
 
@@ -197,6 +200,9 @@ being pushed to the container registry.
 - Drop-in compatible with Azure OpenAI SDKs (Python, .NET, LangChain, REST)
 - Attendees just swap their endpoint URL and use their issued API key
 - Registration page shows available models and copy-paste configuration
+- Single-file test samples are available for
+  [Python Responses API](examples/python/openai_sdk_1.x/azure_openai_responses.py) and
+  [C# with Microsoft.Extensions.AI](examples/dotnet/microsoft_extensions_ai_responses.cs)
 
 ## End-to-End Tests
 

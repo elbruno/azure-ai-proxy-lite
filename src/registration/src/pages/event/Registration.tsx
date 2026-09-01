@@ -223,6 +223,11 @@ export const Registration = () => {
       );
 
     if (modelNames.length > 0) {
+      lines.push("# SDK smoke test defaults");
+      lines.push(`PROXY_ENDPOINT=${safe(proxyEndpoint)}`);
+      lines.push(`PROXY_API_KEY=${safe(attendee?.apiKey)}`);
+      lines.push(`MODEL_NAME=${safe(modelNames[0])}`);
+      lines.push("");
       lines.push("# Available models");
       for (const name of modelNames) {
         const varBase = toEnvVarName(name);
@@ -568,8 +573,9 @@ if __name__ == "__main__":
           </Button>
           <p className={styles.toolkitDescription}>
             Saves a <code>event-{(routeEventId ?? event?.id ?? event?.eventCode ?? "event").toString().toLowerCase().replace(/[^a-z0-9-]+/g, "-")}.env</code> file
-            containing your <code>EVENT_API_KEY</code>, a <code>MODEL_NAME</code> and matching
-            {" "}<code>MODEL_NAME_URL</code> entry for each available model, and any MCP server URLs.
+            containing your <code>EVENT_API_KEY</code>, <code>PROXY_ENDPOINT</code>,
+            {" "}<code>PROXY_API_KEY</code>, a default <code>MODEL_NAME</code>, matching
+            model-specific URL entries, and any MCP server URLs.
           </p>
           <div className={styles.detailsSection}>
           <div className={styles.toolkitCard}>
@@ -615,7 +621,15 @@ if __name__ == "__main__":
           <h3>GitHub Copilot App setup</h3>
           <p className={styles.toolkitDescription}>
             Use these steps if you want to chat with the event models from the GitHub Copilot desktop app.
-            For GPT-5-family models, the Copilot App must use the Responses API.
+            For GPT-5-family models, the Copilot App must use the Responses API. See the{" "}
+            <Link
+              href="https://github.com/elbruno/azure-ai-proxy-lite/blob/main/docs/docs/github_copilot_app.md"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              full setup guide with screenshots
+            </Link>
+            {" "}if you need a visual walkthrough.
           </p>
           <div className={styles.detailsSection}>
             <div className={styles.toolkitCard}>
@@ -708,8 +722,84 @@ print(response.output_text)`}
           </pre>
           </div>
           </div>
+          <h4>C# example using Microsoft.Extensions.AI</h4>
+          The following .NET 10 file-based app uses the OpenAI Responses client through the
+          Microsoft.Extensions.AI <code>IChatClient</code> abstraction.
+          <div className={styles.codeCardWrapper}>
+          <div className={styles.codeCardCopyButton}>
+            <Button
+              icon={<CopyRegular />}
+              onClick={() => copyToClipboard(`#:property ManagePackageVersionsCentrally=false\n#:property NoWarn=OPENAI001\n#:package OpenAI@2.12.0\n#:package Microsoft.Extensions.AI@10.9.0\n#:package Microsoft.Extensions.AI.Abstractions@10.9.0\n#:package Microsoft.Extensions.AI.OpenAI@10.9.0\n\nusing System.ClientModel;\nusing Microsoft.Extensions.AI;\nusing OpenAI;\n\nstring endpoint = "${proxyEndpoint}".TrimEnd('/');\nstring apiKey = "<YOUR_EVENT_API_KEY>";\nstring modelName = "${primaryModelName}";\n\nvar options = new OpenAIClientOptions\n{\n    Endpoint = new Uri(endpoint),\n};\n\nusing IChatClient chatClient = new OpenAIClient(\n        new ApiKeyCredential(apiKey),\n        options)\n    .GetResponsesClient()\n    .AsIChatClient(modelName);\n\nChatResponse response = await chatClient.GetResponseAsync(\n    "Reply with one short sentence confirming the Azure AI Proxy works.",\n    new ChatOptions { MaxOutputTokens = 256 });\n\nConsole.WriteLine(response.Text);`)}
+              size="small"
+            />
+          </div>
+          <div className={styles.codeCard}>
+          <pre style={{ margin: 0 }}>
+            <code style={{ lineHeight: "1", fontSize: "medium" }}>
+              {`#:property ManagePackageVersionsCentrally=false
+#:property NoWarn=OPENAI001
+#:package OpenAI@2.12.0
+#:package Microsoft.Extensions.AI@10.9.0
+#:package Microsoft.Extensions.AI.Abstractions@10.9.0
+#:package Microsoft.Extensions.AI.OpenAI@10.9.0
+
+using System.ClientModel;
+using Microsoft.Extensions.AI;
+using OpenAI;
+
+string endpoint = "${proxyEndpoint}".TrimEnd('/');
+string apiKey = "<YOUR_EVENT_API_KEY>";
+string modelName = "${primaryModelName}";
+
+var options = new OpenAIClientOptions
+{
+    Endpoint = new Uri(endpoint),
+};
+
+using IChatClient chatClient = new OpenAIClient(
+        new ApiKeyCredential(apiKey),
+        options)
+    .GetResponsesClient()
+    .AsIChatClient(modelName);
+
+ChatResponse response = await chatClient.GetResponseAsync(
+    "Reply with one short sentence confirming the Azure AI Proxy works.",
+    new ChatOptions { MaxOutputTokens = 256 });
+
+Console.WriteLine(response.Text);`}
+            </code>
+          </pre>
+          </div>
+          </div>
           <h3 style={{ "marginBottom": "10px" }}>More examples</h3>
           <ul>
+            <li>
+              <Link
+                href="https://github.com/elbruno/azure-ai-proxy-lite/blob/main/docs/docs/github_copilot_app.md"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                GitHub Copilot App setup guide with screenshots
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="https://github.com/elbruno/azure-ai-proxy-lite/blob/main/examples/python/openai_sdk_1.x/azure_openai_responses.py"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Single-file Python Responses API sample
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="https://github.com/elbruno/azure-ai-proxy-lite/blob/main/examples/dotnet/microsoft_extensions_ai_responses.cs"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Single-file C# Microsoft.Extensions.AI sample
+              </Link>
+            </li>
             <li>
               <Link
                 href="https://learn.microsoft.com/azure/ai-services/openai/quickstart"
