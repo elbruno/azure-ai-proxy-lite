@@ -49,7 +49,8 @@ adding:
     This prompt cap leaves room for Copilot's MCP servers, tools, and instructions while keeping
     requests under a typical 100K TPM Azure OpenAI deployment quota. Event organizers can raise or
     lower it based on the backing deployment's TPM headroom and expected concurrent attendees.
-1. Start a new chat, pick your provider/model from the model picker, and send a message.
+1. Start a new chat, pick your provider/model from the model picker, and send a message. After
+   changing provider or model settings, open another new chat so Copilot uses the saved values.
 
 ## Option B — Azure OpenAI template
 
@@ -65,7 +66,8 @@ adding:
     | Wire API | **Responses** for GPT-5-family models |
 
 1. Add each deployment name you were given (e.g. `gpt-5-mini`) as a model.
-1. Start a new chat and select your model.
+1. Start a new chat and select your model. After changing provider or model settings, open another
+   new chat so Copilot uses the saved values.
 
 ## Troubleshooting
 
@@ -74,6 +76,7 @@ adding:
 | `CAPIError: 404 Not Found` on every message | Wire API is set to `Completions`/`Chat Completions` for a GPT-5-family model. | Edit the provider, change Wire API to `Responses`, save, and start a new chat. |
 | `CAPIError: 429` / limit reached | The model request exceeded the Azure OpenAI deployment's RPM/TPM quota. | Edit the model and set token caps, for example `80000` max prompt tokens and `4096` max output tokens, or increase the deployment capacity. |
 | Copilot says MCP servers, tools, and instructions use too much context before the proxy logs a request | The model's max prompt token cap is too low for Copilot's local context budget. | Raise the model's max prompt tokens, for example to `80000`, or run `/context` and disable unused MCP servers, tools, or instructions. |
+| Settings look correct but an existing chat still fails | The existing chat was created before the latest provider/model setting change. | Start a new chat and reselect the custom model. |
 | `CAPIError: 401` | Wrong or expired event API key. | Re-copy the key from your event registration or admin portal. |
 | Model not found / not listed | The deployment name doesn't match a resource attached to your event, or the event isn't active. | Confirm the exact deployment name with the event organiser. |
 | Works once, then fails after a redeploy | The container app briefly serves the old revision while draining. | Wait ~10 seconds and retry. |
