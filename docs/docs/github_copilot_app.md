@@ -81,6 +81,28 @@ adding:
 | Model not found / not listed | The deployment name doesn't match a resource attached to your event, or the event isn't active. | Confirm the exact deployment name with the event organiser. |
 | Works once, then fails after a redeploy | The container app briefly serves the old revision while draining. | Wait ~10 seconds and retry. |
 
+## Lessons learned from the GitHub Copilot app validation
+
+- **Use the Custom endpoint provider for GPT-5-family models.** Configure the proxy base URL with
+  `/api/v1`, set Wire API to **Responses**, and add model IDs such as `gpt-5-mini` and
+  `gpt-5.6-luna`.
+- **Start a new chat after every provider or model configuration change.** Existing chats can keep
+  stale model/provider settings, including old token caps and old Wire API selections.
+- **Treat “too much context” as a client-side Copilot App error first.** If the proxy logs show no
+  new request, the app rejected the request locally. Raise the model's max prompt token cap or run
+  `/context` and disable unused MCP servers, tools, or instructions.
+- **Use token caps that leave room for Copilot's local context.** `80000` max prompt tokens and
+  `4096` max output tokens worked against a 100K TPM Azure OpenAI deployment. A lower prompt cap
+  such as `32000` can be too small when MCP/tools/instructions are enabled.
+- **Use proxy logs to tell client-side failures from upstream failures.** No new log entry means the
+  request never reached the proxy. A logged upstream `429 rate_limit_exceeded` means the route is
+  correct but the Azure OpenAI deployment quota is too low for the request/retry pattern.
+- **Clean up failed test chats before handing off.** In the Copilot App's **Chats** section,
+  right-click failed chats and select **Delete** so future testing starts from a clean list.
+- **Do not add flat `/api/v1/chat/completions` or `/api/v1/embeddings` routes for this scenario.**
+  GPT-5-family Copilot App traffic should use `/api/v1/responses`, while the existing
+  Azure-inference routes already own those flat chat/embedding paths.
+
 ## For event organizers
 
 No special resource type is required on the proxy side — any `Foundry_Model` resource with a GPT-5
