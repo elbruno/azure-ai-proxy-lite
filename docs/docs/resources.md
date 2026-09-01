@@ -2,6 +2,33 @@
 
 To use the Azure AI Proxy, you need to configure the resources. This guide will walk you through the process of configuring the resources.
 
+## TL;DR
+
+1. Deploy the upstream model, agent, search service, or MCP server first.
+2. If using Managed Identity, assign the proxy identity the required role at the upstream resource
+   scope by following the [Managed Identity guide](deployment/managed_identity.md).
+3. In the admin portal, open **Resources** and select **+ New Resource**.
+4. Enter:
+   - **Friendly Name:** administrator-facing label.
+   - **Model Deployment or Search Index Name:** exact upstream deployment/index name; attendees see
+     this value.
+   - **Type:** the route behavior required by the upstream service.
+   - **Endpoint:** upstream endpoint without `api-version`, except Foundry Toolkit endpoints, which
+     must include it.
+   - **Use Managed Identity:** enable for supported Azure resources, or leave disabled and enter the
+     upstream key.
+   - **Region:** administrator reference value.
+   - **Active:** enabled.
+5. Save the resource and confirm it appears as active in the Resources list.
+
+**Success:** the resource is active and can be selected under **Event Resources** when creating or
+editing an event.
+
+## Before you start
+
+You need admin-portal access, an already deployed upstream service, its exact deployment or index
+name, and either its API key or the RBAC permission needed to authorize the proxy identity.
+
 ## Managing resources
 
 The following assumes you have an AI Proxy deployment for your organization and have access to the AI Proxy Admin portal to configure the resources. If you do not have an AI Proxy deployment, please refer to the [deployment guide](deployment/azure.md).
@@ -31,6 +58,16 @@ The proxy supports the following resource types:
 | **MCP Server** | Model Context Protocol server endpoints |
 | **Foundry Toolkit** | Models surfaced to attendees via the Foundry Toolkit extension |
 | **Azure AI Search** | Pass-through access to Azure AI Search indexes |
+
+### Resource configuration matrix
+
+| Type | Endpoint format | Authentication | Important setting |
+|---|---|---|---|
+| **Foundry Model** | Resource endpoint, for example `https://<resource>.openai.azure.com` or the endpoint shown in Foundry; omit `api-version` | Managed Identity recommended, or API key | Deployment name must exactly match the deployed model name |
+| **Foundry Agent** | Foundry project endpoint shown in the portal; omit `api-version` | Managed Identity required | Grant the proxy identity access before saving |
+| **Foundry Toolkit** | `https://<endpoint>.services.ai.azure.com/openai/v1?api-version=<api-version>` | API key | Enable GPT-5.x compatibility when the model requires `max_completion_tokens` |
+| **Azure AI Search** | Search service endpoint; omit `api-version` | API key | Deployment name is the search index name |
+| **MCP Server** | Full upstream MCP endpoint, normally ending in `/mcp` | Optional backend API key | Deployment name becomes the client-facing proxy path |
 
 #### Adding Azure Foundry models with Managed Identity
 
@@ -101,3 +138,23 @@ The registration page publishes each configured MCP server URL for the event so 
     The attendee API key is used to authenticate to the proxy. If a backend MCP **Key** is configured on the resource, the proxy uses that key for downstream requests.
 
 For full deployment and client examples, see [MCP Server Deployment](deployment/mcp-servers.md).
+
+## Verify
+
+Open **Events**, create or edit an event, and open **Event Resources**. The new resource should be
+listed by its Friendly Name. If it is missing, return to **Resources** and confirm **Active** is
+enabled.
+
+## Troubleshooting
+
+| Symptom | Fix |
+|---|---|
+| Resource is absent from Event Resources | Enable **Active**, save again, and refresh the event editor. |
+| Upstream returns 401 or 403 | Verify the stored key, or confirm the proxy identity has the required role at the correct resource scope. |
+| Requests return 404 | Confirm the deployment/index name exactly matches the upstream name and that the selected resource type matches the API. |
+| Foundry Toolkit rejects the endpoint | Include `?api-version=<version>` for Foundry Toolkit only. |
+| GPT-5.x rejects `max_tokens` | Enable **Foundry Toolkit GPT-5.x compatibility**. |
+
+## Next step
+
+[Create an event and attach the configured resources](events.md).

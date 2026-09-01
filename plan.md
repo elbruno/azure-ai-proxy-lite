@@ -48,10 +48,10 @@ Every task-oriented documentation page should use this order:
 
 ### Cross-document consistency
 
-- [ ] Resolve the environment-name conflict: some pages say 7 characters and others say 12.
-- [ ] Resolve the attendee-authentication conflict: GitHub registration is the normal path, but
+- [x] Resolve the environment-name conflict: some pages say 7 characters and others say 12.
+- [x] Resolve the attendee-authentication conflict: GitHub registration is the normal path, but
   shared-code access does not require GitHub.
-- [ ] Document Entra ID and local-admin authentication as explicit supported modes.
+- [x] Document Entra ID and local-admin authentication as explicit supported modes.
 - [ ] Replace stale `gpt-4.1-mini`, `gpt-4o`, and `2024-10-21` examples where GPT-5/Responses is the
   intended current path.
 - [ ] Consolidate or archive legacy pages that duplicate current deployment and testing guidance.
@@ -97,7 +97,7 @@ Every task-oriented documentation page should use this order:
 
 - [x] Add a minimum Copilot App TL;DR.
 - [x] Link the event page to the screenshot walkthrough and single-file samples.
-- [ ] Add a TL;DR to attendee registration that covers both GitHub and shared-code paths.
+- [x] Add a TL;DR to attendee registration that covers both GitHub and shared-code paths.
 - [ ] Add one expected-success screenshot from a clean Copilot chat.
 - [ ] Put copy-paste run commands beside the downloaded `.env` and SDK sample links.
 - [ ] Add a compact troubleshooting decision tree:
@@ -113,11 +113,11 @@ Every task-oriented documentation page should use this order:
 
 Add a TL;DR to each task-oriented page in this order:
 
-1. `deployment/azure.md`
-2. `resources.md`
-3. `events.md`
-4. `attendee.md`
-5. `capacity.md`
+1. [x] `deployment/azure.md`
+2. [x] `resources.md`
+3. [x] `events.md`
+4. [x] `attendee.md`
+5. [x] `capacity.md`
 6. `20-service-installation/70-testing/20-load-testing.md`
 7. `reporting.md`
 8. `deployment/managed_identity.md`

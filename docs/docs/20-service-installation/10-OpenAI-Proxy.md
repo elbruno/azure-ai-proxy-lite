@@ -54,7 +54,7 @@ The recommended way to deploy this app is with Dev Containers. Install the [VS C
 
     You will be prompted for the following:
 
-    1. The environment name, keep the name short, max 7 characters to avoid invalid resource names being generated.
+    1. The environment name; use 12 characters or fewer to keep generated Container App names valid.
     2. Select a subscription from your Azure account.
     3. Select a location (like "eastus" or "sweden central"). Recommend deploying the proxy to the same location you plan to deploy your models.
     4. Select the 'swaLocation' infrastructure parameter.

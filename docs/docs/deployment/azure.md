@@ -6,15 +6,71 @@ The solution consists of three services:
 - **Admin** — The management UI for events and resources (Container App, Entra ID authentication)
 - **Registration** — The attendee registration SPA (Static Web App)
 
+## TL;DR
+
+1. Sign in and select the target subscription:
+
+    ```shell
+    azd auth login
+    az login
+    az account set --subscription <subscription-id>
+    azd config set defaults.subscription <subscription-id>
+    ```
+
+2. Create an environment whose name is **12 characters or fewer**:
+
+    ```shell
+    azd env new <environment-name>
+    ```
+
+3. Optional: target an existing resource group:
+
+    ```shell
+    azd env set AZURE_RESOURCE_GROUP <resource-group-name>
+    azd env set USE_EXISTING_RESOURCE_GROUP true
+    ```
+
+4. Choose admin authentication:
+
+    - **Entra ID (default):** no additional settings.
+    - **Local password:** set all three values below.
+
+      ```shell
+      azd env set ADMIN_AUTH_MODE password
+      azd env set ADMIN_USERNAME <admin-username>
+      azd env set ADMIN_PASSWORD <strong-password>
+      ```
+
+5. Ensure Docker is running, then deploy:
+
+    ```shell
+    azd up
+    ```
+
+6. Record the three URLs printed at the end, or retrieve them later:
+
+    ```shell
+    azd env get-value SERVICE_PROXY_URI
+    azd env get-value SERVICE_ADMIN_URI
+    azd env get-value SERVICE_REGISTRATION_URI
+    ```
+
+**Success:** the registration URL returns the attendee site, the admin URL opens the configured
+login flow, and the proxy URL responds with `401 Unauthorized` when called without an event key.
+
 ## Setup
 
 This repo is set up for deployment on Azure Container Apps using the configuration files in the `infra` folder.
 
+## Before you start
+
 ### Prerequisites
 
 1. An Azure subscription
-2. The Azure CLI logged in to a tenant where you have permission to create Entra ID app registrations
-3. An Azure region that supports the AI models you plan to deploy (models are deployed after `azd up`)
+2. The Azure CLI and Azure Developer CLI (`azd`)
+3. Docker
+4. If using the default Entra ID authentication, permission to create Entra ID app registrations
+5. An Azure region that supports the AI models you plan to deploy (models are deployed after `azd up`)
 
 ### Required permissions
 
@@ -28,7 +84,7 @@ This repo is set up for deployment on Azure Container Apps using the configurati
 
 Tested on Windows, macOS and Ubuntu 22.04.
 
-Install:
+The recommended Dev Container workflow requires:
 
 1. [VS Code](https://code.visualstudio.com/)
 2. [VS Code Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
@@ -80,7 +136,8 @@ The recommended way to deploy this app is with Dev Containers. Install the [VS C
 
     You will be prompted for:
 
-    1. **Environment name** — keep it short (max 7 characters) to avoid invalid resource names.
+    1. **Environment name** — use 12 characters or fewer. Longer names cannot produce valid
+       Container App names.
     2. **Azure subscription** — select from your Azure account.
     3. **Location** — e.g., "centralus" or "eastus".
     4. **swaLocation** — location for the Static Web App (choose from the allowed list). Recommend deploying in the same location as the proxy.
@@ -102,16 +159,47 @@ The recommended way to deploy this app is with Dev Containers. Install the [VS C
 
 9. When `azd` has finished deploying you'll see the endpoints and Entra app registration details in the terminal.
 
+## Verify the deployment
+
+Retrieve the endpoints:
+
+```shell
+PROXY_URI=$(azd env get-value SERVICE_PROXY_URI)
+ADMIN_URI=$(azd env get-value SERVICE_ADMIN_URI)
+REGISTRATION_URI=$(azd env get-value SERVICE_REGISTRATION_URI)
+```
+
+Check them with a browser or HTTP client:
+
+- `REGISTRATION_URI` should return the attendee site.
+- `ADMIN_URI` should redirect to Entra ID or show the local sign-in page.
+- `PROXY_URI/api/v1/eventinfo` should return `401` without an event API key. This confirms the
+  proxy is reachable and authentication is enforced.
+
 ## Authenticating with the AI Proxy Admin
 
-The admin UI uses **Microsoft Entra ID (Azure AD)** authentication when deployed to Azure.
+Azure deployments support two admin authentication modes.
 
-1. Navigate to the admin UI URL displayed after `azd up` completes (or run `azd env get-value SERVICE_ADMIN_URI`).
-2. You will be redirected to the Microsoft login page.
-3. Sign in with your organizational account.
-4. You'll be taken to the admin dashboard.
+### Entra ID
+
+This is the default mode. Navigate to the admin URL, follow the Microsoft sign-in redirect, and use
+an organizational account from the deployment tenant.
 
 > **Note:** The admin UI is accessible to any user in the Entra ID tenant where the app registration was created. For production use, consider restricting access using Azure AD Conditional Access policies or app role assignments.
+
+### Local password
+
+Use this mode when the tenant does not permit app registration creation or guest consent:
+
+```shell
+azd env set ADMIN_AUTH_MODE password
+azd env set ADMIN_USERNAME <admin-username>
+azd env set ADMIN_PASSWORD <strong-password>
+azd up
+```
+
+The admin URL then displays a username/password login instead of redirecting to Entra ID. Keep the
+password in the `azd` environment or another secret store; do not commit it.
 
 ## Updating the deployed app
 
@@ -129,20 +217,26 @@ To redeploy everything:
 azd up
 ```
 
-## Next steps
-
-1. [Deploy Azure AI Resources](#deploy-azure-ai-resources)
-1. [Map AI Resources to the AI Proxy](../resources.md)
-1. [Create and manage events](../events.md)
-1. [Capacity planning](../capacity.md)
-
 ## Deploy Azure AI Resources
 
-1. The deployment creates an empty **Azure AI Foundry project** in your resource group. The Foundry project is deployed as a trusted service, and the proxy's managed identity is automatically granted access to the Foundry AI Services — no manual RBAC configuration is needed. Open the [Azure AI Foundry portal](https://ai.azure.com) and deploy models (e.g., GPT-4.1, GPT-4.1-mini) into this project.
+1. The deployment creates an empty **Azure AI Foundry project** in your resource group. The Foundry project is deployed as a trusted service, and the proxy's managed identity is automatically granted access to the Foundry AI Services — no manual RBAC configuration is needed. Open the [Azure AI Foundry portal](https://ai.azure.com) and deploy the models required for the event, such as `gpt-5-mini`.
 2. The proxy supports model deployments from `Azure OpenAI Service`, `Azure AI Foundry Projects`, `MCP Servers`, and `Azure AI Search`.
 3. Make a note of the `endpoint_key` and `endpoint_url` as you'll need them when you configure resources for the AI Proxy.
 4. For Managed Identity deployments, see the [Managed Identity guide](managed_identity.md).
 
 ## Troubleshooting
 
-If you encounter any issues deploying the solution, please raise an issue on the [GitHub repo](https://github.com/microsoft/azure-ai-proxy-lite/issues)
+| Symptom | Fix |
+|---|---|
+| Container App name validation fails | Recreate the `azd` environment with a name of 12 characters or fewer. |
+| A deployment hook says Azure login is required | Run both `azd auth login` and `az login`, then select the same subscription in both tools. |
+| Entra app registration creation is denied | Ask for app-registration permission or use the local-password mode described above. |
+| Windows hook exits with code 127 | Put Git Bash before WSL Bash on `PATH`; see the Windows prerequisite above. |
+| Image build cannot connect to Docker | Start Docker Desktop before running `azd up`. |
+| Existing resource group deployment fails | Set both `AZURE_RESOURCE_GROUP` and `USE_EXISTING_RESOURCE_GROUP=true`. |
+
+For other deployment failures, raise an issue on the [GitHub repo](https://github.com/microsoft/azure-ai-proxy-lite/issues).
+
+## Next step
+
+[Configure the Azure AI resources that events will use](../resources.md).
