@@ -73,12 +73,12 @@ Every task-oriented documentation page should use this order:
 ### Administrator quickstart checklist
 
 - [ ] Add one canonical “Deploy to event-ready” page linking the seven steps above.
-- [ ] Add a post-deployment health check for proxy, admin, and registration endpoints.
-- [ ] Add a resource configuration matrix:
+- [x] Add a post-deployment health check for proxy, admin, and registration endpoints.
+- [x] Add a resource configuration matrix:
   resource type, endpoint format, API version, authentication method, RBAC role, and supported API.
 - [ ] Add a pre-event rehearsal checklist:
   registration, API key, Copilot App, Responses API, new chat, quota, metrics, and rollback.
-- [ ] Add measured capacity profiles, including the current Copilot repository-session result:
+- [x] Add measured capacity profiles, including the current Copilot repository-session result:
   100K TPM supports 10 synchronized users; 600K TPM supports 50.
 - [ ] Add operational guidance for alerts, quota monitoring, revision rollback, backup/restore, and
   event cleanup.
@@ -100,14 +100,14 @@ Every task-oriented documentation page should use this order:
 - [x] Add a TL;DR to attendee registration that covers both GitHub and shared-code paths.
 - [ ] Add one expected-success screenshot from a clean Copilot chat.
 - [ ] Put copy-paste run commands beside the downloaded `.env` and SDK sample links.
-- [ ] Add a compact troubleshooting decision tree:
+- [x] Add a compact troubleshooting decision tree:
   - no proxy log → Copilot context/configuration;
   - 401 → expired or incorrect event key;
   - 404 → wrong endpoint or Wire API;
   - `rate_limit_exceeded`/429 → Azure model quota;
   - settings changed → start a new chat and reselect the model.
-- [ ] Explain the difference between Copilot prompt/output limits, event token caps, and Azure TPM.
-- [ ] Keep failed-chat cleanup guidance near validation and troubleshooting.
+- [x] Explain the difference between Copilot prompt/output limits, event token caps, and Azure TPM.
+- [x] Keep failed-chat cleanup guidance near validation and troubleshooting.
 
 ## Phase 4 — page-level TL;DR rollout
 
