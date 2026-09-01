@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 namespace AzureAIProxy.Tests.Unit;
 
 /// <summary>
-/// Unit tests for MetricService covering token usage parsing from various JSON response formats.
+/// Unit tests for MetricService covering token usage parsing from JSON and SSE response formats.
 /// </summary>
 public class MetricServiceTests
 {
@@ -138,6 +138,52 @@ public class MetricServiceTests
         Assert.Equal(5, metric.PromptTokens);
         Assert.Equal(15, metric.CompletionTokens);
         Assert.Equal(20, metric.TotalTokens);
+    }
+
+    [Fact]
+    public async Task LogApiUsageAsync_ResponsesUsage_MapsInputAndOutputTokens()
+    {
+        var channel = new TestMetricChannel();
+        var service = new MetricService(channel, CreateRateLimiter());
+        var response = """{"usage":{"input_tokens":12,"output_tokens":8,"total_tokens":20}}""";
+
+        await service.LogApiUsageAsync(
+            CreateContext("key-responses", "evt-1"),
+            CreateDeployment("gpt-5-mini"),
+            response
+        );
+
+        var metric = Assert.Single(channel.Metrics);
+        Assert.Equal(12, metric.PromptTokens);
+        Assert.Equal(8, metric.CompletionTokens);
+        Assert.Equal(20, metric.TotalTokens);
+    }
+
+    [Fact]
+    public async Task LogApiUsageAsync_ResponsesSse_UsesCompletedEventUsage()
+    {
+        var channel = new TestMetricChannel();
+        var service = new MetricService(channel, CreateRateLimiter());
+        var response = """
+            event: response.created
+            data: {"type":"response.created","response":{"id":"resp_1"}}
+
+            event: response.completed
+            data: {"type":"response.completed","response":{"usage":{"input_tokens":120,"output_tokens":30,"total_tokens":150}}}
+
+            data: [DONE]
+            """;
+
+        await service.LogApiUsageAsync(
+            CreateContext("key-stream", "evt-1"),
+            CreateDeployment("gpt-5-mini"),
+            response
+        );
+
+        var metric = Assert.Single(channel.Metrics);
+        Assert.Equal(120, metric.PromptTokens);
+        Assert.Equal(30, metric.CompletionTokens);
+        Assert.Equal(150, metric.TotalTokens);
     }
 
     private static RequestContext CreateContext(string apiKey, string eventId) => new()

@@ -1,0 +1,1048 @@
+{
+  "started_at": "2026-09-01T01:04:25.327906+00:00",
+  "target": "https://bruno-aoai-szvi2s2pn4r4i-proxy.victoriousmushroom-e9b3163f.eastus.azurecontainerapps.io/api/v1",
+  "model": "gpt-5-mini",
+  "profile": {
+    "context_files": [
+      "README.md",
+      "src/AzureAIProxy/Routes/AzureOpenAI.cs",
+      "src/AzureAIProxy/Services/ProxyService.cs"
+    ],
+    "prompt_chars": 32136,
+    "max_output_tokens": 4096,
+    "reasoning_effort": "high",
+    "stream": true
+  },
+  "stages": [
+    {
+      "concurrency": 10,
+      "duration_seconds": 21.698,
+      "requests": 10,
+      "successes": 10,
+      "success_rate_percent": 100.0,
+      "requests_per_second": 0.461,
+      "status_codes": {
+        "200": 10
+      },
+      "errors": {},
+      "latency_ms": {
+        "mean": 17879.19,
+        "p50": 19374.0,
+        "p95": 21692.47,
+        "p99": 21692.47,
+        "max": 21692.47
+      },
+      "time_to_first_byte_ms": {
+        "p50": 753.72,
+        "p95": 2645.04
+      },
+      "usage": {
+        "input_tokens": 67840,
+        "output_tokens": 19174,
+        "total_tokens": 87014
+      },
+      "requests_detail": [
+        {
+          "user_id": 1,
+          "status": 200,
+          "success": true,
+          "latency_ms": 20384.3668000045,
+          "time_to_first_byte_ms": 730.8315000118455,
+          "input_tokens": 6784,
+          "output_tokens": 2207,
+          "total_tokens": 8991,
+          "error_type": null
+        },
+        {
+          "user_id": 2,
+          "status": 200,
+          "success": true,
+          "latency_ms": 19689.341499994043,
+          "time_to_first_byte_ms": 753.7193000025582,
+          "input_tokens": 6784,
+          "output_tokens": 2305,
+          "total_tokens": 9089,
+          "error_type": null
+        },
+        {
+          "user_id": 3,
+          "status": 200,
+          "success": true,
+          "latency_ms": 21555.351999995764,
+          "time_to_first_byte_ms": 1153.1832000036957,
+          "input_tokens": 6784,
+          "output_tokens": 1456,
+          "total_tokens": 8240,
+          "error_type": null
+        },
+        {
+          "user_id": 4,
+          "status": 200,
+          "success": true,
+          "latency_ms": 12483.566199996858,
+          "time_to_first_byte_ms": 740.154299986898,
+          "input_tokens": 6784,
+          "output_tokens": 1427,
+          "total_tokens": 8211,
+          "error_type": null
+        },
+        {
+          "user_id": 5,
+          "status": 200,
+          "success": true,
+          "latency_ms": 18293.724399991333,
+          "time_to_first_byte_ms": 665.3826999972807,
+          "input_tokens": 6784,
+          "output_tokens": 2273,
+          "total_tokens": 9057,
+          "error_type": null
+        },
+        {
+          "user_id": 6,
+          "status": 200,
+          "success": true,
+          "latency_ms": 12656.994099990698,
+          "time_to_first_byte_ms": 2645.0352999963798,
+          "input_tokens": 6784,
+          "output_tokens": 1259,
+          "total_tokens": 8043,
+          "error_type": null
+        },
+        {
+          "user_id": 7,
+          "status": 200,
+          "success": true,
+          "latency_ms": 19373.999699993874,
+          "time_to_first_byte_ms": 758.9811000070767,
+          "input_tokens": 6784,
+          "output_tokens": 1923,
+          "total_tokens": 8707,
+          "error_type": null
+        },
+        {
+          "user_id": 8,
+          "status": 200,
+          "success": true,
+          "latency_ms": 19872.142799998983,
+          "time_to_first_byte_ms": 651.8699000007473,
+          "input_tokens": 6784,
+          "output_tokens": 2405,
+          "total_tokens": 9189,
+          "error_type": null
+        },
+        {
+          "user_id": 9,
+          "status": 200,
+          "success": true,
+          "latency_ms": 12789.892900007544,
+          "time_to_first_byte_ms": 768.5019000055036,
+          "input_tokens": 6784,
+          "output_tokens": 1612,
+          "total_tokens": 8396,
+          "error_type": null
+        },
+        {
+          "user_id": 10,
+          "status": 200,
+          "success": true,
+          "latency_ms": 21692.471199989086,
+          "time_to_first_byte_ms": 847.2315999970306,
+          "input_tokens": 6784,
+          "output_tokens": 2307,
+          "total_tokens": 9091,
+          "error_type": null
+        }
+      ]
+    },
+    {
+      "concurrency": 25,
+      "duration_seconds": 22.058,
+      "requests": 25,
+      "successes": 13,
+      "success_rate_percent": 52.0,
+      "requests_per_second": 1.133,
+      "status_codes": {
+        "200": 25
+      },
+      "errors": {
+        "rate_limit_exceeded": 12
+      },
+      "latency_ms": {
+        "mean": 16577.07,
+        "p50": 16092.82,
+        "p95": 21246.58,
+        "p99": 22057.61,
+        "max": 22057.61
+      },
+      "time_to_first_byte_ms": {
+        "p50": 662.46,
+        "p95": 788.05
+      },
+      "usage": {
+        "input_tokens": 88192,
+        "output_tokens": 24957,
+        "total_tokens": 113149
+      },
+      "requests_detail": [
+        {
+          "user_id": 1,
+          "status": 200,
+          "success": false,
+          "latency_ms": 1503.694600003655,
+          "time_to_first_byte_ms": 1488.9020999980858,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "error_type": "rate_limit_exceeded"
+        },
+        {
+          "user_id": 2,
+          "status": 200,
+          "success": true,
+          "latency_ms": 16092.817999990075,
+          "time_to_first_byte_ms": 582.7753999910783,
+          "input_tokens": 6784,
+          "output_tokens": 2022,
+          "total_tokens": 8806,
+          "error_type": null
+        },
+        {
+          "user_id": 3,
+          "status": 200,
+          "success": false,
+          "latency_ms": 691.8012999958592,
+          "time_to_first_byte_ms": 688.4411000064574,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "error_type": "rate_limit_exceeded"
+        },
+        {
+          "user_id": 4,
+          "status": 200,
+          "success": false,
+          "latency_ms": 1496.9712000020081,
+          "time_to_first_byte_ms": 1491.4881000004243,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "error_type": "rate_limit_exceeded"
+        },
+        {
+          "user_id": 5,
+          "status": 200,
+          "success": false,
+          "latency_ms": 788.2580000004964,
+          "time_to_first_byte_ms": 788.1945000117412,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "error_type": "rate_limit_exceeded"
+        },
+        {
+          "user_id": 6,
+          "status": 200,
+          "success": true,
+          "latency_ms": 22057.60709999595,
+          "time_to_first_byte_ms": 663.1193999928655,
+          "input_tokens": 6784,
+          "output_tokens": 2519,
+          "total_tokens": 9303,
+          "error_type": null
+        },
+        {
+          "user_id": 7,
+          "status": 200,
+          "success": true,
+          "latency_ms": 11963.489700006903,
+          "time_to_first_byte_ms": 788.3742999983951,
+          "input_tokens": 6784,
+          "output_tokens": 1387,
+          "total_tokens": 8171,
+          "error_type": null
+        },
+        {
+          "user_id": 8,
+          "status": 200,
+          "success": false,
+          "latency_ms": 796.5495000098599,
+          "time_to_first_byte_ms": 792.5569000071846,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "error_type": "rate_limit_exceeded"
+        },
+        {
+          "user_id": 9,
+          "status": 200,
+          "success": true,
+          "latency_ms": 19517.41149999725,
+          "time_to_first_byte_ms": 788.0002000019886,
+          "input_tokens": 6784,
+          "output_tokens": 2471,
+          "total_tokens": 9255,
+          "error_type": null
+        },
+        {
+          "user_id": 10,
+          "status": 200,
+          "success": true,
+          "latency_ms": 17564.246899986756,
+          "time_to_first_byte_ms": 505.88099999004044,
+          "input_tokens": 6784,
+          "output_tokens": 2191,
+          "total_tokens": 8975,
+          "error_type": null
+        },
+        {
+          "user_id": 11,
+          "status": 200,
+          "success": true,
+          "latency_ms": 10517.482600000221,
+          "time_to_first_byte_ms": 788.0483000044478,
+          "input_tokens": 6784,
+          "output_tokens": 1223,
+          "total_tokens": 8007,
+          "error_type": null
+        },
+        {
+          "user_id": 12,
+          "status": 200,
+          "success": true,
+          "latency_ms": 14296.381499996642,
+          "time_to_first_byte_ms": 707.744500003173,
+          "input_tokens": 6784,
+          "output_tokens": 1512,
+          "total_tokens": 8296,
+          "error_type": null
+        },
+        {
+          "user_id": 13,
+          "status": 200,
+          "success": true,
+          "latency_ms": 20829.21769999666,
+          "time_to_first_byte_ms": 707.7485000045272,
+          "input_tokens": 6784,
+          "output_tokens": 2010,
+          "total_tokens": 8794,
+          "error_type": null
+        },
+        {
+          "user_id": 14,
+          "status": 200,
+          "success": false,
+          "latency_ms": 787.7217000059318,
+          "time_to_first_byte_ms": 787.6871000044048,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "error_type": "rate_limit_exceeded"
+        },
+        {
+          "user_id": 15,
+          "status": 200,
+          "success": false,
+          "latency_ms": 787.3031999915838,
+          "time_to_first_byte_ms": 787.2681000008015,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "error_type": "rate_limit_exceeded"
+        },
+        {
+          "user_id": 16,
+          "status": 200,
+          "success": false,
+          "latency_ms": 819.0081999928225,
+          "time_to_first_byte_ms": 815.8735999895725,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "error_type": "rate_limit_exceeded"
+        },
+        {
+          "user_id": 17,
+          "status": 200,
+          "success": false,
+          "latency_ms": 804.257099996903,
+          "time_to_first_byte_ms": 793.6735999974189,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "error_type": "rate_limit_exceeded"
+        },
+        {
+          "user_id": 18,
+          "status": 200,
+          "success": true,
+          "latency_ms": 15624.089299992193,
+          "time_to_first_byte_ms": 500.97660000028554,
+          "input_tokens": 6784,
+          "output_tokens": 1859,
+          "total_tokens": 8643,
+          "error_type": null
+        },
+        {
+          "user_id": 19,
+          "status": 200,
+          "success": true,
+          "latency_ms": 12387.907500000438,
+          "time_to_first_byte_ms": 662.4561000062386,
+          "input_tokens": 6784,
+          "output_tokens": 1647,
+          "total_tokens": 8431,
+          "error_type": null
+        },
+        {
+          "user_id": 20,
+          "status": 200,
+          "success": true,
+          "latency_ms": 20292.173800000455,
+          "time_to_first_byte_ms": 491.6343000077177,
+          "input_tokens": 6784,
+          "output_tokens": 2373,
+          "total_tokens": 9157,
+          "error_type": null
+        },
+        {
+          "user_id": 21,
+          "status": 200,
+          "success": false,
+          "latency_ms": 689.7843000042485,
+          "time_to_first_byte_ms": 682.9015999974217,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "error_type": "rate_limit_exceeded"
+        },
+        {
+          "user_id": 22,
+          "status": 200,
+          "success": false,
+          "latency_ms": 786.5080000046873,
+          "time_to_first_byte_ms": 786.4642999920761,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "error_type": "rate_limit_exceeded"
+        },
+        {
+          "user_id": 23,
+          "status": 200,
+          "success": true,
+          "latency_ms": 21246.583599990117,
+          "time_to_first_byte_ms": 581.3128000008874,
+          "input_tokens": 6784,
+          "output_tokens": 2128,
+          "total_tokens": 8912,
+          "error_type": null
+        },
+        {
+          "user_id": 24,
+          "status": 200,
+          "success": false,
+          "latency_ms": 2023.5213999985717,
+          "time_to_first_byte_ms": 1987.8154000034556,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "error_type": "rate_limit_exceeded"
+        },
+        {
+          "user_id": 25,
+          "status": 200,
+          "success": true,
+          "latency_ms": 13112.55400000664,
+          "time_to_first_byte_ms": 584.5801000104984,
+          "input_tokens": 6784,
+          "output_tokens": 1615,
+          "total_tokens": 8399,
+          "error_type": null
+        }
+      ]
+    },
+    {
+      "concurrency": 50,
+      "duration_seconds": 27.07,
+      "requests": 50,
+      "successes": 13,
+      "success_rate_percent": 26.0,
+      "requests_per_second": 1.847,
+      "status_codes": {
+        "200": 50
+      },
+      "errors": {
+        "rate_limit_exceeded": 37
+      },
+      "latency_ms": {
+        "mean": 18673.34,
+        "p50": 17743.52,
+        "p95": 22717.49,
+        "p99": 27065.12,
+        "max": 27065.12
+      },
+      "time_to_first_byte_ms": {
+        "p50": 718.03,
+        "p95": 829.77
+      },
+      "usage": {
+        "input_tokens": 88192,
+        "output_tokens": 28401,
+        "total_tokens": 116593
+      },
+      "requests_detail": [
+        {
+          "user_id": 1,
+          "status": 200,
+          "success": false,
+          "latency_ms": 929.9620000092546,
+          "time_to_first_byte_ms": 924.6848000038881,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "error_type": "rate_limit_exceeded"
+        },
+        {
+          "user_id": 2,
+          "status": 200,
+          "success": false,
+          "latency_ms": 1056.4004000043496,
+          "time_to_first_byte_ms": 1051.198100001784,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "error_type": "rate_limit_exceeded"
+        },
+        {
+          "user_id": 3,
+          "status": 200,
+          "success": false,
+          "latency_ms": 1054.3235999939498,
+          "time_to_first_byte_ms": 1048.800000004121,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "error_type": "rate_limit_exceeded"
+        },
+        {
+          "user_id": 4,
+          "status": 200,
+          "success": false,
+          "latency_ms": 1098.194499994861,
+          "time_to_first_byte_ms": 1098.0266999977175,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "error_type": "rate_limit_exceeded"
+        },
+        {
+          "user_id": 5,
+          "status": 200,
+          "success": true,
+          "latency_ms": 22401.798099992448,
+          "time_to_first_byte_ms": 718.027399998391,
+          "input_tokens": 6784,
+          "output_tokens": 3030,
+          "total_tokens": 9814,
+          "error_type": null
+        },
+        {
+          "user_id": 6,
+          "status": 200,
+          "success": true,
+          "latency_ms": 16672.641099998145,
+          "time_to_first_byte_ms": 753.3319000067422,
+          "input_tokens": 6784,
+          "output_tokens": 1926,
+          "total_tokens": 8710,
+          "error_type": null
+        },
+        {
+          "user_id": 7,
+          "status": 200,
+          "success": true,
+          "latency_ms": 13072.278699997696,
+          "time_to_first_byte_ms": 643.9702000061516,
+          "input_tokens": 6784,
+          "output_tokens": 1402,
+          "total_tokens": 8186,
+          "error_type": null
+        },
+        {
+          "user_id": 8,
+          "status": 200,
+          "success": false,
+          "latency_ms": 864.8453999921912,
+          "time_to_first_byte_ms": 863.7280999973882,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "error_type": "rate_limit_exceeded"
+        },
+        {
+          "user_id": 9,
+          "status": 200,
+          "success": false,
+          "latency_ms": 969.44970000186,
+          "time_to_first_byte_ms": 967.4188999924809,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "error_type": "rate_limit_exceeded"
+        },
+        {
+          "user_id": 10,
+          "status": 200,
+          "success": false,
+          "latency_ms": 912.3302000080002,
+          "time_to_first_byte_ms": 903.853000010713,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "error_type": "rate_limit_exceeded"
+        },
+        {
+          "user_id": 11,
+          "status": 200,
+          "success": true,
+          "latency_ms": 13065.452099996037,
+          "time_to_first_byte_ms": 717.5014999957057,
+          "input_tokens": 6784,
+          "output_tokens": 1570,
+          "total_tokens": 8354,
+          "error_type": null
+        },
+        {
+          "user_id": 12,
+          "status": 200,
+          "success": true,
+          "latency_ms": 21461.848200007807,
+          "time_to_first_byte_ms": 830.6865000049584,
+          "input_tokens": 6784,
+          "output_tokens": 1835,
+          "total_tokens": 8619,
+          "error_type": null
+        },
+        {
+          "user_id": 13,
+          "status": 200,
+          "success": false,
+          "latency_ms": 832.9128000041237,
+          "time_to_first_byte_ms": 832.8777999995509,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "error_type": "rate_limit_exceeded"
+        },
+        {
+          "user_id": 14,
+          "status": 200,
+          "success": false,
+          "latency_ms": 2764.2811000114307,
+          "time_to_first_byte_ms": 2760.449300010805,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "error_type": "rate_limit_exceeded"
+        },
+        {
+          "user_id": 15,
+          "status": 200,
+          "success": true,
+          "latency_ms": 20857.079199995496,
+          "time_to_first_byte_ms": 719.2175999953179,
+          "input_tokens": 6784,
+          "output_tokens": 2184,
+          "total_tokens": 8968,
+          "error_type": null
+        },
+        {
+          "user_id": 16,
+          "status": 200,
+          "success": false,
+          "latency_ms": 832.6364000095055,
+          "time_to_first_byte_ms": 832.6070000039181,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "error_type": "rate_limit_exceeded"
+        },
+        {
+          "user_id": 17,
+          "status": 200,
+          "success": false,
+          "latency_ms": 831.8786000018008,
+          "time_to_first_byte_ms": 831.8302999978187,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "error_type": "rate_limit_exceeded"
+        },
+        {
+          "user_id": 18,
+          "status": 200,
+          "success": false,
+          "latency_ms": 832.3057000088738,
+          "time_to_first_byte_ms": 832.2407000086969,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "error_type": "rate_limit_exceeded"
+        },
+        {
+          "user_id": 19,
+          "status": 200,
+          "success": false,
+          "latency_ms": 1047.0084999979008,
+          "time_to_first_byte_ms": 1030.5282000044826,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "error_type": "rate_limit_exceeded"
+        },
+        {
+          "user_id": 20,
+          "status": 200,
+          "success": false,
+          "latency_ms": 852.0335000066552,
+          "time_to_first_byte_ms": 851.9843999965815,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "error_type": "rate_limit_exceeded"
+        },
+        {
+          "user_id": 21,
+          "status": 200,
+          "success": false,
+          "latency_ms": 893.3713999867905,
+          "time_to_first_byte_ms": 888.5028999939095,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "error_type": "rate_limit_exceeded"
+        },
+        {
+          "user_id": 22,
+          "status": 200,
+          "success": false,
+          "latency_ms": 849.7058999928413,
+          "time_to_first_byte_ms": 849.654699995881,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "error_type": "rate_limit_exceeded"
+        },
+        {
+          "user_id": 23,
+          "status": 200,
+          "success": false,
+          "latency_ms": 831.4970999927027,
+          "time_to_first_byte_ms": 831.4595999981975,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "error_type": "rate_limit_exceeded"
+        },
+        {
+          "user_id": 24,
+          "status": 200,
+          "success": false,
+          "latency_ms": 1313.300200010417,
+          "time_to_first_byte_ms": 1290.0241000024835,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "error_type": "rate_limit_exceeded"
+        },
+        {
+          "user_id": 25,
+          "status": 200,
+          "success": false,
+          "latency_ms": 1026.5161999996053,
+          "time_to_first_byte_ms": 1021.9618999981321,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "error_type": "rate_limit_exceeded"
+        },
+        {
+          "user_id": 26,
+          "status": 200,
+          "success": false,
+          "latency_ms": 2734.5292000100017,
+          "time_to_first_byte_ms": 2702.797999998438,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "error_type": "rate_limit_exceeded"
+        },
+        {
+          "user_id": 27,
+          "status": 200,
+          "success": false,
+          "latency_ms": 1035.1901999965776,
+          "time_to_first_byte_ms": 1029.5750999939628,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "error_type": "rate_limit_exceeded"
+        },
+        {
+          "user_id": 28,
+          "status": 200,
+          "success": false,
+          "latency_ms": 963.1973000068683,
+          "time_to_first_byte_ms": 960.2091999986442,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "error_type": "rate_limit_exceeded"
+        },
+        {
+          "user_id": 29,
+          "status": 200,
+          "success": false,
+          "latency_ms": 960.0438000052236,
+          "time_to_first_byte_ms": 954.3789000017568,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "error_type": "rate_limit_exceeded"
+        },
+        {
+          "user_id": 30,
+          "status": 200,
+          "success": true,
+          "latency_ms": 22717.490299997735,
+          "time_to_first_byte_ms": 715.270300002885,
+          "input_tokens": 6784,
+          "output_tokens": 2742,
+          "total_tokens": 9526,
+          "error_type": null
+        },
+        {
+          "user_id": 31,
+          "status": 200,
+          "success": false,
+          "latency_ms": 850.9468999982346,
+          "time_to_first_byte_ms": 831.0780999890994,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "error_type": "rate_limit_exceeded"
+        },
+        {
+          "user_id": 32,
+          "status": 200,
+          "success": false,
+          "latency_ms": 959.7719000012148,
+          "time_to_first_byte_ms": 954.1662000119686,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "error_type": "rate_limit_exceeded"
+        },
+        {
+          "user_id": 33,
+          "status": 200,
+          "success": false,
+          "latency_ms": 1023.390999995172,
+          "time_to_first_byte_ms": 1021.1103999899933,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "error_type": "rate_limit_exceeded"
+        },
+        {
+          "user_id": 34,
+          "status": 200,
+          "success": false,
+          "latency_ms": 1045.6861999991816,
+          "time_to_first_byte_ms": 1035.710600001039,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "error_type": "rate_limit_exceeded"
+        },
+        {
+          "user_id": 35,
+          "status": 200,
+          "success": false,
+          "latency_ms": 977.3119000019506,
+          "time_to_first_byte_ms": 972.0169000065653,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "error_type": "rate_limit_exceeded"
+        },
+        {
+          "user_id": 36,
+          "status": 200,
+          "success": false,
+          "latency_ms": 1136.3541000027908,
+          "time_to_first_byte_ms": 1116.2492000003112,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "error_type": "rate_limit_exceeded"
+        },
+        {
+          "user_id": 37,
+          "status": 200,
+          "success": false,
+          "latency_ms": 830.6006000057096,
+          "time_to_first_byte_ms": 830.572500010021,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "error_type": "rate_limit_exceeded"
+        },
+        {
+          "user_id": 38,
+          "status": 200,
+          "success": false,
+          "latency_ms": 883.7223000009544,
+          "time_to_first_byte_ms": 878.9671999984421,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "error_type": "rate_limit_exceeded"
+        },
+        {
+          "user_id": 39,
+          "status": 200,
+          "success": false,
+          "latency_ms": 2114.14700000023,
+          "time_to_first_byte_ms": 2055.160700008855,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "error_type": "rate_limit_exceeded"
+        },
+        {
+          "user_id": 40,
+          "status": 200,
+          "success": false,
+          "latency_ms": 992.4592000024859,
+          "time_to_first_byte_ms": 977.803000001586,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "error_type": "rate_limit_exceeded"
+        },
+        {
+          "user_id": 41,
+          "status": 200,
+          "success": false,
+          "latency_ms": 900.5890999978874,
+          "time_to_first_byte_ms": 893.3554999966873,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "error_type": "rate_limit_exceeded"
+        },
+        {
+          "user_id": 42,
+          "status": 200,
+          "success": true,
+          "latency_ms": 17743.515100009972,
+          "time_to_first_byte_ms": 716.6246000124374,
+          "input_tokens": 6784,
+          "output_tokens": 1711,
+          "total_tokens": 8495,
+          "error_type": null
+        },
+        {
+          "user_id": 43,
+          "status": 200,
+          "success": true,
+          "latency_ms": 16255.780299994512,
+          "time_to_first_byte_ms": 626.9669999892358,
+          "input_tokens": 6784,
+          "output_tokens": 1833,
+          "total_tokens": 8617,
+          "error_type": null
+        },
+        {
+          "user_id": 44,
+          "status": 200,
+          "success": true,
+          "latency_ms": 16227.067500003614,
+          "time_to_first_byte_ms": 629.3552999995882,
+          "input_tokens": 6784,
+          "output_tokens": 2245,
+          "total_tokens": 9029,
+          "error_type": null
+        },
+        {
+          "user_id": 45,
+          "status": 200,
+          "success": false,
+          "latency_ms": 1003.9736000035191,
+          "time_to_first_byte_ms": 1000.0784000003478,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "error_type": "rate_limit_exceeded"
+        },
+        {
+          "user_id": 46,
+          "status": 200,
+          "success": true,
+          "latency_ms": 17072.23750000412,
+          "time_to_first_byte_ms": 829.77120000578,
+          "input_tokens": 6784,
+          "output_tokens": 2058,
+          "total_tokens": 8842,
+          "error_type": null
+        },
+        {
+          "user_id": 47,
+          "status": 200,
+          "success": true,
+          "latency_ms": 18141.081800000393,
+          "time_to_first_byte_ms": 725.9555000055116,
+          "input_tokens": 6784,
+          "output_tokens": 2323,
+          "total_tokens": 9107,
+          "error_type": null
+        },
+        {
+          "user_id": 48,
+          "status": 200,
+          "success": false,
+          "latency_ms": 826.245199990808,
+          "time_to_first_byte_ms": 826.1799999891082,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "error_type": "rate_limit_exceeded"
+        },
+        {
+          "user_id": 49,
+          "status": 200,
+          "success": false,
+          "latency_ms": 1046.3020000024699,
+          "time_to_first_byte_ms": 1041.6991000092821,
+          "input_tokens": null,
+          "output_tokens": null,
+          "total_tokens": null,
+          "error_type": "rate_limit_exceeded"
+        },
+        {
+          "user_id": 50,
+          "status": 200,
+          "success": true,
+          "latency_ms": 27065.122600004543,
+          "time_to_first_byte_ms": 828.8603999972111,
+          "input_tokens": 6784,
+          "output_tokens": 3542,
+          "total_tokens": 10326,
+          "error_type": null
+        }
+      ]
+    }
+  ],
+  "completed_at": "2026-09-01T01:07:46.171999+00:00"
+}

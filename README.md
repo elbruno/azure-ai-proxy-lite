@@ -232,3 +232,10 @@ Run the interactive UI runner:
 ```bash
 npm run e2e:test:ui
 ```
+
+## Copilot Responses Load Test
+
+Use [`loadtest/copilot_responses_load_test.py`](loadtest/copilot_responses_load_test.py) to validate
+10, 25, and 50 simultaneous Copilot-style repository sessions. The measured capacity guidance and
+results are in the [load-testing documentation](docs/docs/20-service-installation/70-testing/20-load-testing.md).
+The tested `gpt-5-mini` deployment supports all 50 concurrent sessions at 600K TPM.

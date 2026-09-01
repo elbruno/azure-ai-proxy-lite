@@ -13,6 +13,7 @@ nav:
   - Attendees: attendee.md
   - Reporting: reporting.md
   - Capacity: capacity.md
+  - Load testing: 20-service-installation/70-testing/20-load-testing.md
   - Foundry Toolkit: foundry_toolkit.md
   - GitHub Copilot App: github_copilot_app.md
   - Developers: developers.md

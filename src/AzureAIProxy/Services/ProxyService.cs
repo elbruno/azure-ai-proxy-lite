@@ -294,26 +294,81 @@ public class ProxyService(IHttpClientFactory httpClientFactory, IMetricService m
         foreach (var header in requestHeaders)
             requestMessage.Headers.Add(header.Key, header.Value);
 
-        var response = await httpClient.SendAsync(
+        using var response = await httpClient.SendAsync(
             requestMessage,
-            HttpCompletionOption.ResponseHeadersRead
+            HttpCompletionOption.ResponseHeadersRead,
+            context.RequestAborted
         );
-        await metricService.LogApiUsageAsync(requestContext, deployment, null);
 
         context.Response.StatusCode = (int)response.StatusCode;
-        context.Response.ContentType = "application/json";
+        context.Response.ContentType =
+            response.Content.Headers.ContentType?.ToString() ?? "application/json";
 
         if ((int)response.StatusCode >= 400)
         {
-            var errorBody = await response.Content.ReadAsStringAsync();
+            var errorBody = await response.Content.ReadAsStringAsync(context.RequestAborted);
             logger.LogWarning("Upstream POST stream error: {StatusCode} {Url} Body: {Body}", (int)response.StatusCode, requestUrlWithQuery, errorBody);
-            await context.Response.WriteAsync(errorBody);
+            await metricService.LogApiUsageAsync(requestContext, deployment, errorBody);
+            await context.Response.WriteAsync(errorBody, context.RequestAborted);
         }
         else
         {
             await using var responseStream = await response.Content.ReadAsStreamAsync();
-            await responseStream.CopyToAsync(context.Response.Body);
+            using var metricCapture = new MemoryStream();
+            var buffer = new byte[81920];
+            const int maxMetricCaptureBytes = 1024 * 1024;
+
+            try
+            {
+                int bytesRead;
+                while ((bytesRead = await responseStream.ReadAsync(buffer, context.RequestAborted)) > 0)
+                {
+                    await context.Response.Body.WriteAsync(
+                        buffer.AsMemory(0, bytesRead),
+                        context.RequestAborted
+                    );
+
+                    CaptureTail(metricCapture, buffer, bytesRead, maxMetricCaptureBytes);
+                }
+            }
+
+            finally
+            {
+                var responseContent = Encoding.UTF8.GetString(
+                    metricCapture.GetBuffer(),
+                    0,
+                    (int)metricCapture.Length
+                );
+                await metricService.LogApiUsageAsync(requestContext, deployment, responseContent);
+            }
         }
+    }
+
+    private static void CaptureTail(
+        MemoryStream capture,
+        byte[] buffer,
+        int bytesRead,
+        int maxCaptureBytes
+    )
+    {
+        if (bytesRead >= maxCaptureBytes)
+        {
+            capture.SetLength(0);
+            capture.Write(buffer, bytesRead - maxCaptureBytes, maxCaptureBytes);
+            return;
+        }
+
+        var overflow = (int)capture.Length + bytesRead - maxCaptureBytes;
+        if (overflow > 0)
+        {
+            var existingBuffer = capture.GetBuffer();
+            var retainedBytes = (int)capture.Length - overflow;
+            Buffer.BlockCopy(existingBuffer, overflow, existingBuffer, 0, retainedBytes);
+            capture.SetLength(retainedBytes);
+            capture.Position = retainedBytes;
+        }
+
+        capture.Write(buffer, 0, bytesRead);
     }
 
     /// <summary>

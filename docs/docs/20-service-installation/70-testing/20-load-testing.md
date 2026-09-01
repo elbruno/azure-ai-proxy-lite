@@ -1,6 +1,101 @@
 # Load testing
 
-There are several load testing tools available. The recommended tool is JMeter as the test plan can be deployed to Azure. The JMeter test plan is located in the `loadtest` folder. The test plan is configured to run 100 concurrent users, generating 4 requests per minute.
+Two load tests are available:
+
+- `loadtest/copilot_responses_load_test.py` models simultaneous GitHub Copilot repository sessions
+  using the streaming Responses API.
+- `loadtest/openai_proxy load test.jmx` is the older JMeter plan for generic HTTP throughput tests.
+
+## Copilot repository-session stress test
+
+The Python harness sends synchronized streaming requests to `/api/v1/responses`. Each virtual user
+receives approximately 32K characters of repository context, uses high reasoning effort, and allows
+up to 4096 output tokens. It records HTTP status, Responses API error events, latency, time to first
+byte, and token usage. It never writes credentials, prompt contents, or model responses to the
+results file.
+
+Install the existing load-test dependency:
+
+```bash
+python -m pip install -r loadtest/requirements.txt
+```
+
+Set an active event API key without putting it on the command line:
+
+PowerShell:
+
+```powershell
+$env:PROXY_API_KEY = "<event-api-key>"
+```
+
+Bash:
+
+```bash
+export PROXY_API_KEY="<event-api-key>"
+```
+
+Run the three staged concurrency levels:
+
+```bash
+python loadtest/copilot_responses_load_test.py \
+  --proxy-url https://<proxy-host>/api/v1 \
+  --model gpt-5-mini \
+  --concurrency 10 25 50 \
+  --prompt-chars 32000 \
+  --max-output-tokens 4096 \
+  --reasoning-effort high \
+  --stage-pause-seconds 65
+```
+
+The pause isolates stages across Azure OpenAI's one-minute RPM/TPM windows. A successful streaming
+request can still use HTTP 200 and later emit a `response.failed` event, so the harness parses the
+SSE events and requires `response.completed` instead of treating every HTTP 200 as success.
+`response.incomplete` and streams that end without a terminal event are reported as failures.
+
+### Measured results
+
+The following test used `gpt-5-mini`, one 0.75-vCPU/1.5-GiB Container App replica, and 6784 input
+tokens per virtual user.
+
+| Model capacity | Concurrent users | Success rate | Successful latency p95 | Result |
+|---:|---:|---:|---:|---|
+| 100K TPM / 100 RPM | 10 | 100% | 21.7 s | Pass |
+| 100K TPM / 100 RPM | 25 | 52% | 21.2 s | 12 `rate_limit_exceeded` events |
+| 100K TPM / 100 RPM | 50 | 26% | 22.7 s | 37 `rate_limit_exceeded` events |
+| 600K TPM / 600 RPM | 10 | 100% | 27.4 s | Pass |
+| 600K TPM / 600 RPM | 25 | 100% | 24.1 s | Pass |
+| 600K TPM / 600 RPM | 50 | 100% | 26.6 s | Pass |
+
+At 50 users, the successful run processed 339,200 input tokens and 102,211 output tokens
+(441,411 total). Container App CPU remained low, so Azure OpenAI TPM—not proxy compute—was the
+limiting resource. For this profile, use at least 600K TPM for 50 simultaneous sessions and retain
+headroom for retries and unrelated traffic.
+
+Across the complete successful 10/25/50 sequence, Azure Monitor recorded 85 requests, 576,640 input
+tokens, 174,044 output tokens, and zero errors. The single Container App replica peaked at 2.5% CPU
+and 8% memory.
+
+Scale an existing Global Standard deployment by recreating it with the same model/version and a
+higher capacity:
+
+```bash
+az cognitiveservices account deployment create \
+  --resource-group <resource-group> \
+  --name <foundry-account> \
+  --deployment-name gpt-5-mini \
+  --model-format OpenAI \
+  --model-name gpt-5-mini \
+  --model-version 2025-08-07 \
+  --sku-name GlobalStandard \
+  --sku-capacity 600
+```
+
+Raw reports are committed as:
+
+- `loadtest/copilot_responses_results_100k.json`
+- `loadtest/copilot_responses_results_600k.json`
+
+## JMeter throughput test
 
 1. You'll need to update the URL in the `HTTP Request Defaults` element to point to your REST API endpoint.
 

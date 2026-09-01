@@ -41,10 +41,12 @@ internal sealed class StubRateLimitService : IRateLimitService
 internal sealed class NoopMetricService : AzureAIProxy.Services.IMetricService
 {
     public int Calls { get; private set; }
+    public string? LastResponseContent { get; private set; }
 
     public Task LogApiUsageAsync(RequestContext requestContext, Deployment deployment, string? responseContent)
     {
         Calls++;
+        LastResponseContent = responseContent;
         return Task.CompletedTask;
     }
 }
