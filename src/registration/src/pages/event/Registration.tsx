@@ -208,19 +208,8 @@ export const Registration = () => {
     lines.push(`EVENT_API_KEY=${safe(attendee?.apiKey)}`);
     lines.push("");
 
-    // Exclude any models exposed via the Foundry Toolkit.
-    const foundryToolkitNames = new Set(
-      (event?.foundryToolkitEndpoints ?? []).map(
-        (ep: FoundryToolkitEndpoint) => ep.deploymentName
-      )
-    );
-    const modelNames = Object.entries(event?.capabilities ?? {})
-      .sort(([a], [b]) => a.localeCompare(b))
-      .flatMap(([, names]) =>
-        [...names]
-          .filter((n) => !foundryToolkitNames.has(n))
-          .sort((a, b) => a.localeCompare(b))
-      );
+    const modelNames = [...(event?.capabilities?.["foundry-model"] ?? [])]
+      .sort((a, b) => a.localeCompare(b));
 
     if (modelNames.length > 0) {
       lines.push("# SDK smoke test defaults");
@@ -299,22 +288,13 @@ export const Registration = () => {
 
   const trimmedEventCode = event?.eventCode?.trim();
 
-  const nonFoundryModelNames: string[] = (() => {
-    if (!event?.capabilities) return [];
-    const foundryToolkitNames = new Set(
-      (event.foundryToolkitEndpoints ?? []).map((ep: FoundryToolkitEndpoint) => ep.deploymentName)
-    );
-    return Object.entries(event.capabilities)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .flatMap(([, names]) =>
-        [...names].filter((n) => !foundryToolkitNames.has(n)).sort((a, b) => a.localeCompare(b))
-      );
-  })();
-  const hasNonFoundryModels = nonFoundryModelNames.length > 0;
+  const foundryModelNames = [...(event?.capabilities?.["foundry-model"] ?? [])]
+    .sort((a, b) => a.localeCompare(b));
+  const hasFoundryModels = foundryModelNames.length > 0;
   const proxyEndpoint = event?.proxyUrl ?? `${window.location.origin}/api/v1`;
-  const primaryModelName = nonFoundryModelNames[0] ?? "gpt-5-mini";
-  const modelsForCopilot = nonFoundryModelNames.length > 0
-    ? nonFoundryModelNames.join(", ")
+  const primaryModelName = foundryModelNames[0] ?? "gpt-5-mini";
+  const modelsForCopilot = foundryModelNames.length > 0
+    ? foundryModelNames.join(", ")
     : "gpt-5-mini, gpt-5.6-luna";
 
   const eventStatus: "not-started" | "active" | "ended" | "unknown" = (() => {
@@ -409,7 +389,7 @@ export const Registration = () => {
         <>
           {((event?.foundryToolkitEndpoints && event.foundryToolkitEndpoints.length > 0) ||
             (event?.mcpServerEndpoints && event.mcpServerEndpoints.length > 0) ||
-            hasNonFoundryModels) && (
+            hasFoundryModels) && (
             <h2>Registration Details</h2>
           )}
           <div className={styles.detailsSection}>
@@ -558,7 +538,7 @@ if __name__ == "__main__":
             </>
           )}
           </div>
-          {hasNonFoundryModels && (
+          {hasFoundryModels && (
           <>
           <h3>SDK Access</h3>
           The real power of the Azure OpenAI Service is in the SDKs that allow you to integrate AI capabilities into your applications. You'll need your API Key and the proxy Endpoint to access AI resources using an SDK such as the OpenAI SDK or making REST calls. Or click to download your event keys and endpoints.
@@ -577,6 +557,17 @@ if __name__ == "__main__":
             {" "}<code>PROXY_API_KEY</code>, a default <code>MODEL_NAME</code>, matching
             model-specific URL entries, and any MCP server URLs.
           </p>
+          <p className={styles.toolkitDescription}>
+            Rename or copy the downloaded file to <code>.env</code> in the repository root, then run:
+          </p>
+          <div className={styles.codeCard}>
+            <pre style={{ margin: 0 }}>
+              <code>{`python -m pip install openai python-dotenv
+python examples/python/openai_sdk_1.x/azure_openai_responses.py
+
+dotnet run --file examples/dotnet/microsoft_extensions_ai_responses.cs`}</code>
+            </pre>
+          </div>
           <div className={styles.detailsSection}>
           <div className={styles.toolkitCard}>
             <span className={styles.toolkitLabel}>Event API Key:</span>
@@ -611,10 +602,10 @@ if __name__ == "__main__":
               size="small"
             />
           </div>
-          {event?.capabilities && hasNonFoundryModels && (
+          {event?.capabilities && hasFoundryModels && (
             <div className={styles.toolkitCard}>
               <span className={styles.toolkitLabel}>Available Models:</span>
-              <span className={styles.toolkitEndpointValue}>{nonFoundryModelNames.join(", ")}</span>
+              <span className={styles.toolkitEndpointValue}>{foundryModelNames.join(", ")}</span>
             </div>
           )}
           </div>
@@ -811,7 +802,7 @@ Console.WriteLine(response.Text);`}
             </li>
             <li>
               <Link
-                href="https://github.com/microsoft/azure-ai-proxy-lite/tree/main/examples"
+                href="https://github.com/elbruno/azure-ai-proxy-lite/tree/main/examples"
                 target="_blank"
                 rel="noopener noreferrer"
               >

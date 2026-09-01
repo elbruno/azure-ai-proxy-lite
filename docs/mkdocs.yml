@@ -1,7 +1,11 @@
 site_name: Azure AI Proxy
+site_url: https://elbruno.github.io/azure-ai-proxy-lite/
+repo_url: https://github.com/elbruno/azure-ai-proxy-lite
+repo_name: elbruno/azure-ai-proxy-lite
 
 nav:
   - Introduction: index.md
+  - Event-ready administrator: event-ready.md
   - Deployment:
     - Deploy to Azure: deployment/azure.md
     - MCP Servers: deployment/mcp-servers.md

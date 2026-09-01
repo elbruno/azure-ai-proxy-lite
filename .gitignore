@@ -25,4 +25,4 @@ generate_*.log
 # Test results
 TestResults/
 .codex
-MY_DEPLOYMENT.md
+docs/private/MY_DEPLOYMENT.md

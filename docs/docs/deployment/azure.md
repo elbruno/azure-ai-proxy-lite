@@ -98,7 +98,7 @@ The recommended way to deploy this app is with Dev Containers. Install the [VS C
 2. Clone the repo:
 
     ```shell
-    git clone https://github.com/microsoft/azure-ai-proxy-lite.git
+    git clone https://github.com/elbruno/azure-ai-proxy-lite.git
     ```
 
 3. Open the repo in VS Code.
@@ -235,7 +235,7 @@ azd up
 | Image build cannot connect to Docker | Start Docker Desktop before running `azd up`. |
 | Existing resource group deployment fails | Set both `AZURE_RESOURCE_GROUP` and `USE_EXISTING_RESOURCE_GROUP=true`. |
 
-For other deployment failures, raise an issue on the [GitHub repo](https://github.com/microsoft/azure-ai-proxy-lite/issues).
+For other deployment failures, raise an issue on the [GitHub repo](https://github.com/elbruno/azure-ai-proxy-lite/issues).
 
 ## Next step
 

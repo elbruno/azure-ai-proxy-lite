@@ -1,5 +1,26 @@
 # Managed Identity Support for Azure AI Proxy
 
+## TL;DR
+
+1. Get the proxy identity principal ID:
+
+    ```shell
+    azd env get-value SERVICE_PROXY_IDENTITY_PRINCIPAL_ID
+    ```
+
+2. Assign **Cognitive Services OpenAI User** at the Azure OpenAI/AI Services account scope.
+3. For Foundry Agent operations, also assign **Azure AI User** at the Foundry project scope.
+4. In **Resources**, add the exact deployment and endpoint, enable **Use Managed Identity**, leave
+   **Key** blank, enable **Active**, and save.
+5. Attach the resource to a test event and send one request.
+
+**Success:** the event request succeeds without an upstream API key stored in the catalog.
+
+## Before you start
+
+You need permission to create role assignments, the upstream resource ID, the proxy identity
+principal ID, and an active test event.
+
 ## Overview
 
 This proxy supports **Azure Managed Identity** authentication to access Azure OpenAI Service and Azure AI Foundry Agent Service resources. This eliminates the need to store API keys — the proxy authenticates using its user-assigned managed identity and Azure RBAC.
@@ -67,7 +88,7 @@ https://<account>.cognitiveservices.azure.com/...
 
 ## Automated Setup
 
-A script is provided to automate RBAC role assignment. You can download the helper script <a href="https://raw.githubusercontent.com/microsoft/azure-ai-proxy-lite/refs/heads/main/scripts/setup-managed-identity-rbac.sh" target="_blank">setup-managed-identity-rbac.sh</a>.
+A script is provided to automate RBAC role assignment. You can download the helper script <a href="https://raw.githubusercontent.com/elbruno/azure-ai-proxy-lite/refs/heads/main/scripts/setup-managed-identity-rbac.sh" target="_blank">setup-managed-identity-rbac.sh</a>.
 
 
 ## Authentication Flow
@@ -123,7 +144,7 @@ The proxy uses `DefaultAzureCredential` which tries authentication methods in or
 
 1. Navigate to **Resources** → **+ New Resource**
 2. Fill in:
-   - **Friendly Name**: e.g., "Production GPT-4o"
+   - **Friendly Name**: e.g., "Production GPT-5 mini"
    - **Deployment Name**: Your deployment name
    - **Type**: Select model type (e.g., `Foundry_Model`, `Foundry_Agent`)
    - **Endpoint**: Your endpoint URL
@@ -146,3 +167,23 @@ The proxy uses `DefaultAzureCredential` which falls back to:
 - `UseManagedIdentity` defaults to `false`
 - No breaking changes to existing deployments
 - UI supports both authentication methods per model
+
+## Verify
+
+Attach the resource to a test event and send a request. A successful response confirms endpoint,
+deployment name, token scope, and RBAC. A 401/403 from upstream indicates authentication or scope
+rather than event-key validation.
+
+## Troubleshooting
+
+| Symptom | Fix |
+|---|---|
+| 403 from an OpenAI model | Assign **Cognitive Services OpenAI User** to the proxy principal at the account scope and allow RBAC propagation time. |
+| Agent operations return 403 | Add **Azure AI User** at the Foundry project scope; Azure AI Developer is insufficient. |
+| Foundry Agent endpoint returns 404 | Use `https://<account>.services.ai.azure.com/api/projects/<project-name>`. |
+| Resource editor still requires a key | Enable **Use Managed Identity** and ensure the selected resource type supports it. |
+| Local development cannot get a token | Run `az login` or configure a service principal supported by `DefaultAzureCredential`. |
+
+## Next step
+
+[Add and verify the resource in the admin portal](../resources.md).

@@ -81,6 +81,9 @@ adding:
 1. Start a new chat, pick your provider/model from the model picker, and send a message. After
    changing provider or model settings, open another new chat so Copilot uses the saved values.
 
+    **Expected result:** the new chat returns a normal model response without a CAPI error. Keep the
+    successful chat for the event handoff and delete failed test chats from the **Chats** list.
+
 ## Option B — Azure OpenAI template
 
 1. Open the GitHub Copilot app → **Settings** → **Model providers**.
@@ -127,6 +130,15 @@ renaming it to `.env` in the sample's working directory. The generated file incl
 
 - [Python Responses API sample](https://github.com/elbruno/azure-ai-proxy-lite/blob/main/examples/python/openai_sdk_1.x/azure_openai_responses.py)
 - [C# Microsoft.Extensions.AI Responses sample](https://github.com/elbruno/azure-ai-proxy-lite/blob/main/examples/dotnet/microsoft_extensions_ai_responses.cs)
+
+From the repository root:
+
+```shell
+python -m pip install openai python-dotenv
+python examples/python/openai_sdk_1.x/azure_openai_responses.py
+
+dotnet run --file examples/dotnet/microsoft_extensions_ai_responses.cs
+```
 
 ## Lessons learned from the GitHub Copilot app validation
 

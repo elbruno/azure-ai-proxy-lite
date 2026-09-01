@@ -6,6 +6,39 @@ Two load tests are available:
   using the streaming Responses API.
 - `loadtest/openai_proxy load test.jmx` is the older JMeter plan for generic HTTP throughput tests.
 
+## TL;DR
+
+1. Install the harness dependency:
+
+    ```shell
+    python -m pip install -r loadtest/requirements.txt
+    ```
+
+2. Set `PROXY_API_KEY` to an active test attendee key.
+3. Run the synchronized Copilot profile:
+
+    ```shell
+    python loadtest/copilot_responses_load_test.py \
+      --proxy-url https://<proxy-host>/api/v1 \
+      --model gpt-5-mini \
+      --concurrency 10 25 50 \
+      --prompt-chars 32000 \
+      --max-output-tokens 4096 \
+      --reasoning-effort high \
+      --stage-pause-seconds 65
+    ```
+
+4. Require 100% `response.completed` at the target concurrency; HTTP 200 by itself is not success.
+5. Compare request/token totals and throttling with Azure Monitor.
+
+**Success:** all target stages complete without `response.failed`, `response.incomplete`, missing
+terminal events, or rate-limit errors.
+
+## Before you start
+
+Use a non-production event key, confirm the test model and event caps, and ensure the subscription
+has enough quota to run the planned profile.
+
 ## Copilot repository-session stress test
 
 The Python harness sends synchronized streaming requests to `/api/v1/responses`. Each virtual user
@@ -95,6 +128,23 @@ Raw reports are committed as:
 - `loadtest/copilot_responses_results_100k.json`
 - `loadtest/copilot_responses_results_600k.json`
 
+## Verify
+
+Check the JSON report for a 100% success rate at each required stage. Confirm Azure Monitor request
+and token counts cover the same test window and that Container App CPU/memory do not indicate a
+separate proxy bottleneck.
+
+## Troubleshooting
+
+| Symptom | Fix |
+|---|---|
+| HTTP 200 counted as success but the request failed | Use this harness; it parses terminal SSE events and requires `response.completed`. |
+| `rate_limit_exceeded` | Increase Azure model TPM/RPM or reduce concurrency/context/output limits. |
+| 401 | Use an active event attendee key and confirm the event time window. |
+| 404 | Use the exact event model ID and a proxy endpoint ending in `/api/v1`. |
+| Missing terminal event | Treat the stream as failed and inspect proxy/upstream logs for cancellation or timeout. |
+| Proxy metrics show zero streaming tokens | Confirm the deployed proxy includes terminal SSE usage accounting. |
+
 ## JMeter throughput test
 
 1. You'll need to update the URL in the `HTTP Request Defaults` element to point to your REST API endpoint.
@@ -108,3 +158,7 @@ Raw reports are committed as:
 ### Example load test
 
 ![](../../media/example_perf_jmeter.png)
+
+## Next step
+
+[Monitor the rehearsal or live event](../../reporting.md).

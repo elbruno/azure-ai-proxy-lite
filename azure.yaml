@@ -71,6 +71,6 @@ hooks:
       echo ""
       echo "Then add models via the admin UI with 'Use Managed Identity' enabled."
       echo ""
-      echo "See QUICKSTART_MANAGED_IDENTITY.md for details"
+      echo "See docs/docs/deployment/managed_identity.md for details"
       echo "============================================="
       echo ""

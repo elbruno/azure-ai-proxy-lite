@@ -1,33 +1,55 @@
-# Frequently asked questions
+# Troubleshooting and frequently asked questions
 
-1. **I've created an event but no models are available. What's wrong?**
+Start with the symptom. Follow the linked guide when the quick fix does not resolve it.
 
-    Create a model deployment in Azure. From the Azure AI Proxy Admin portal, select the `Resources` tab and create a new resource of type `Foundry Model` using the Azure OpenAI resource key, endpoint and deployment name. Once the resource is created, edit the event to add the resource.
+| Symptom | Likely cause | First action |
+|---|---|---|
+| No models are available in an event | No active resource is attached | Create an active [resource](resources.md), then edit the event and select it. |
+| Admin redirects to an unexpected login or cannot sign in | Authentication mode or tenant mismatch | Review [Entra ID and local-password modes](deployment/azure.md#authenticating-with-the-ai-proxy-admin). |
+| Copilot fails before a proxy request is logged | Local context or stale client configuration | Use 80000 prompt tokens, disable unused context, save, and start a new chat. |
+| 401 Unauthorized | Incorrect or expired event key | Re-copy the key and confirm the [event window](attendee.md#troubleshooting). |
+| 404 Not Found | Wrong endpoint, route, Wire API, or deployment name | Use the exact `/api/v1` endpoint and Responses for GPT-5-family models. |
+| 429 or `rate_limit_exceeded` | Azure model TPM/RPM is saturated | Review [capacity planning](capacity.md) and scale or reduce the workload. |
+| HTTP 200 stream later fails | Responses API terminal event reports failure | Parse SSE and require `response.completed`; use the [load harness](20-service-installation/70-testing/20-load-testing.md). |
+| Managed Identity returns 403 | Missing role or wrong scope | Apply the roles in the [Managed Identity guide](deployment/managed_identity.md). |
+| Reporting counts requests but not streaming tokens | Old proxy revision or missing terminal usage | Deploy the current proxy and verify terminal Responses usage. |
+| Shared-code access fails | Incorrect key format | Use `event-id@shared-code/email-address`; the code must be at least five alphanumeric characters. |
 
-1. **What resource types does the proxy support?**
+## Common questions
 
-    The proxy supports five resource types: `Foundry Model` (chat completions, embeddings), `Foundry Agent` (Azure AI Foundry Agent Service), `MCP Server` (Model Context Protocol), `Foundry Toolkit` (Foundry Toolkit extension), and `Azure AI Search` (search queries). See [Configuring resources](resources.md) for details.
+### What resource types does the proxy support?
 
-1. **How do I authenticate with the AI Proxy Admin portal?**
+Foundry Model, Foundry Agent, MCP Server, Foundry Toolkit, and Azure AI Search. See
+[Configuring resources](resources.md).
 
-    When deployed to Azure, the admin portal uses **Microsoft Entra ID** authentication. Navigate to the admin UI URL and sign in with your organizational Microsoft account. When running locally with Docker, the admin portal uses username/password authentication (configured via `ADMIN_USERNAME` and `ADMIN_PASSWORD` environment variables).
+### Can Azure deployments use local admin authentication?
 
-1. **Can I use Managed Identity instead of API keys?**
+Yes. Entra ID is the default, but Azure deployments can set `ADMIN_AUTH_MODE=password`,
+`ADMIN_USERNAME`, and `ADMIN_PASSWORD` before `azd up`.
 
-    Yes. The proxy supports Azure Managed Identity authentication for all resource types. Enable the **Use Managed Identity** toggle when adding a resource. See the [Managed Identity guide](deployment/managed_identity.md) for RBAC setup instructions.
+### Can attendees participate without GitHub?
 
-1. **What is the Daily Request Cap?**
+Yes, when the organizer configures Event Shared Code access. GitHub registration is the normal path;
+shared code is recommended only for short workshops.
 
-    The Daily Request Cap limits the number of requests a single attendee can make per day. It resets at midnight UTC. This prevents runaway usage and abuse.
+### What do the three token limits mean?
 
-1. **What is the Max Token Cap?**
+- Copilot maximum prompt tokens control local client context.
+- Event Max Token Cap controls output tokens allowed per attendee request.
+- Azure TPM/RPM controls shared model deployment capacity.
 
-    The Max Token Cap limits the maximum tokens per request. This ensures that attendees don't consume excessive capacity. See [Capacity planning](capacity.md) for guidance.
+See [Capacity planning](capacity.md).
 
-1. **Can attendees access the proxy without a GitHub account?**
+### How do I redeploy one service?
 
-    Yes, using the `Event Shared Code` feature. Set a shared code on the event, and distribute the API key format `event-id@shared-code/email-address` to attendees. This is recommended only for short in-person workshops.
+```shell
+azd deploy proxy
+azd deploy admin
+azd deploy registration
+```
 
-1. **How do I update the proxy after making code changes?**
+Run `azd up` to provision and deploy everything.
 
-    Run `azd deploy proxy` to redeploy the proxy API, `azd deploy admin` to redeploy the admin UI, or `azd deploy registration` to redeploy the registration app. Run `azd up` to redeploy everything.
+## Next step
+
+[Follow the complete event-ready administrator journey](event-ready.md).

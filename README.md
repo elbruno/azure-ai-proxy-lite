@@ -2,7 +2,7 @@
 
 A managed, multi-tenant proxy that sits between workshop attendees and Azure AI services, giving organisers full control over access, capacity, and usage tracking. Run multiple workshops simultaneously with full data isolation between events.
 
-The solution documentation is published [here](https://microsoft.github.io/azure-ai-proxy-lite/).
+The solution documentation is published [here](https://elbruno.github.io/azure-ai-proxy-lite/).
 
 For attendees using the GitHub Copilot desktop app, see the
 [GitHub Copilot App setup guide with screenshots](docs/docs/github_copilot_app.md).
@@ -15,7 +15,7 @@ For attendees using the GitHub Copilot desktop app, see the
 
 | Role | Start here | Continue with |
 |---|---|---|
-| **Event administrator** | [Deploy to Azure](docs/docs/deployment/azure.md) | [Configure resources](docs/docs/resources.md), [create events](docs/docs/events.md), [plan capacity](docs/docs/capacity.md), [review reporting](docs/docs/reporting.md), and [run load tests](docs/docs/20-service-installation/70-testing/20-load-testing.md) |
+| **Event administrator** | [Deploy to event-ready](docs/docs/event-ready.md) | [Deploy to Azure](docs/docs/deployment/azure.md), [configure resources](docs/docs/resources.md), [create events](docs/docs/events.md), [plan capacity](docs/docs/capacity.md), [review reporting](docs/docs/reporting.md), and [run load tests](docs/docs/20-service-installation/70-testing/20-load-testing.md) |
 | **Event attendee** | [Register for an event](docs/docs/attendee.md) | [Configure the GitHub Copilot App](docs/docs/github_copilot_app.md) or use the [Python](examples/python/openai_sdk_1.x/azure_openai_responses.py) and [C#](examples/dotnet/microsoft_extensions_ai_responses.cs) samples |
 
 Additional references:

@@ -2,6 +2,28 @@
 
 The Azure AI Proxy is a transparent proxy that supports several Azure AI SDKs including Azure OpenAI SDKs, Azure AI Search SDKs, Azure AI Foundry Agent Service SDKs, REST calls, as well as libraries like LangChain. Access is granted using a time bound API Key and the Azure AI Proxy endpoint URL.
 
+## TL;DR
+
+1. Download the event `.env` file and place it in the repository root or sample working directory.
+2. Confirm it contains `PROXY_ENDPOINT`, `PROXY_API_KEY`, and `MODEL_NAME`.
+3. Run one current Responses sample:
+
+    ```shell
+    python -m pip install openai python-dotenv
+    python examples/python/openai_sdk_1.x/azure_openai_responses.py
+
+    dotnet run --file examples/dotnet/microsoft_extensions_ai_responses.cs
+    ```
+
+4. Expect one short sentence confirming the proxy works.
+
+**Success:** the sample returns text from the event model using the time-bound event key.
+
+## Before you start
+
+Use the Proxy Endpoint exactly as displayed; it already ends in `/api/v1`. For GPT-5-family models,
+use the Responses API rather than Chat Completions.
+
 ## Azure AI Proxy SDK access
 
 For SDK access to Azure AI Proxy services, you need two things:
@@ -29,6 +51,16 @@ The Azure AI Proxy supports the following APIs:
 | **Foundry Conversations**      | `/api/v1/openai/v1/conversations`                                          | Azure AI Foundry conversation management              |
 | **Foundry Responses**          | `/api/v1/openai/v1/responses`                                              | Azure AI Foundry response management                  |
 | **MCP Server**                 | `/api/v1/mcp/{deploymentName}/{path}`                                      | Model Context Protocol server passthrough             |
+| **OpenAI Responses**           | `/api/v1/responses` or `/api/v1/openai/responses`                           | GPT-5-family Responses API, including streaming       |
+
+## Current Responses API samples
+
+The canonical smoke tests are:
+
+- [Python Responses API](https://github.com/elbruno/azure-ai-proxy-lite/blob/main/examples/python/openai_sdk_1.x/azure_openai_responses.py)
+- [C# Microsoft.Extensions.AI](https://github.com/elbruno/azure-ai-proxy-lite/blob/main/examples/dotnet/microsoft_extensions_ai_responses.cs)
+
+Both read the generated event `.env` values and use `gpt-5-mini` as the fallback model name.
 
 ## Azure OpenAI SDKs
 
@@ -55,7 +87,7 @@ load_dotenv()
 ENDPOINT_URL = os.environ.get("ENDPOINT_URL")
 API_KEY = os.environ.get("API_KEY")
 API_VERSION = "2025-01-01-preview"
-MODEL_NAME = "gpt-4.1-mini"
+MODEL_NAME = "gpt-5-mini"
 
 
 client = AzureOpenAI(
@@ -84,6 +116,9 @@ print(completion.model_dump_json(indent=2))
 print()
 print(completion.choices[0].message.content)
 ```
+
+The Chat Completions example remains useful for deployments that support that API. Use the
+Responses samples above for GPT-5-family deployments.
 
 ## Azure AI Foundry Agent Service
 
@@ -162,3 +197,22 @@ def retrieve_documentation(
 
     return docs
 ```
+
+## Verify
+
+Run a current single-file sample and confirm it returns text. Then check the event report to confirm
+the request and token usage were attributed to the expected model.
+
+## Troubleshooting
+
+| Symptom | Fix |
+|---|---|
+| 401 | Re-copy `PROXY_API_KEY` from the active event page. |
+| 404 with GPT-5 | Use the Responses sample and confirm `PROXY_ENDPOINT` ends in `/api/v1`. |
+| Model not found | Set `MODEL_NAME` to the exact model ID displayed on the event page. |
+| `.env` values are ignored | Run from the directory containing `.env`, or export the variables in the current shell. |
+| C# package restore fails | Use .NET 10 or later for the file-based app sample. |
+
+## Next step
+
+[Use the attendee guide for Copilot App setup](github_copilot_app.md).

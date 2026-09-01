@@ -6,6 +6,13 @@
 
 A managed, multi-tenant proxy that sits between workshop attendees and Azure AI services, giving organisers full control over access, capacity, and usage tracking. Its purpose is to simplify running workshops, particularly community and online events, and make the attendee experience friction-free. Run multiple workshops simultaneously with full data isolation between events.
 
+## Choose your path
+
+| Event administrator | Event attendee |
+|---|---|
+| Deploy, configure resources, create an event, validate capacity, rehearse, and monitor. | Register, copy event values, configure Copilot or an SDK, and test access. |
+| **[Start the event-ready administrator journey](event-ready.md)** | **[Start attendee registration](attendee.md)** |
+
 ## Architecture
 
 ```mermaid
@@ -100,6 +107,6 @@ Watch this 5-minute video to learn how to get started with the Azure AI Proxy.
 
 ## Open Source
 
-The Azure AI Proxy is an open-source project, licensed under MIT. You can find the source code on [GitHub](https://github.com/microsoft/azure-ai-proxy-lite){:target="_blank"}.
+The Azure AI Proxy is an open-source project, licensed under MIT. You can find this fork's source code on [GitHub](https://github.com/elbruno/azure-ai-proxy-lite){:target="_blank"}.
 
 This project would not be possible without contributions from multiple people. Please feel free to contribute to the project by submitting a pull request or opening an issue.

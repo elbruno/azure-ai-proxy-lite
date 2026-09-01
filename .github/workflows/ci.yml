@@ -1,5 +1,6 @@
 name: ci
 on:
+  workflow_dispatch:
   push:
     branches:
       - master
@@ -10,6 +11,9 @@ permissions:
   contents: write
 jobs:
   deploy:
+    concurrency:
+      group: documentation-pages
+      cancel-in-progress: true
     env:
       CONFIG_FILE: docs/mkdocs.yml
       REQUIREMENTS: docs/requirements.txt
