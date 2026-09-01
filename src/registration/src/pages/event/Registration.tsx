@@ -306,6 +306,11 @@ export const Registration = () => {
       );
   })();
   const hasNonFoundryModels = nonFoundryModelNames.length > 0;
+  const proxyEndpoint = event?.proxyUrl ?? `${window.location.origin}/api/v1`;
+  const primaryModelName = nonFoundryModelNames[0] ?? "gpt-5-mini";
+  const modelsForCopilot = nonFoundryModelNames.length > 0
+    ? nonFoundryModelNames.join(", ")
+    : "gpt-5-mini, gpt-5.6-luna";
 
   const eventStatus: "not-started" | "active" | "ended" | "unknown" = (() => {
     if (!event?.startTimestamp || !event?.endTimestamp) return "unknown";
@@ -589,13 +594,13 @@ if __name__ == "__main__":
           </div>
           <div className={styles.toolkitCard}>
             <span className={styles.toolkitLabel}>Proxy Endpoint:</span>
-            <span className={styles.toolkitEndpointValue} title={event?.proxyUrl ?? `${window.location.origin}/api/v1`}>
-              {event?.proxyUrl ?? `${window.location.origin}/api/v1`}
+            <span className={styles.toolkitEndpointValue} title={proxyEndpoint}>
+              {proxyEndpoint}
             </span>
             <Button
               icon={<CopyRegular />}
               onClick={() =>
-                copyToClipboard(event?.proxyUrl ?? `${window.location.origin}/api/v1`)
+                copyToClipboard(proxyEndpoint)
               }
               size="small"
             />
@@ -607,13 +612,69 @@ if __name__ == "__main__":
             </div>
           )}
           </div>
+          <h3>GitHub Copilot App setup</h3>
+          <p className={styles.toolkitDescription}>
+            Use these steps if you want to chat with the event models from the GitHub Copilot desktop app.
+            For GPT-5-family models, the Copilot App must use the Responses API.
+          </p>
+          <div className={styles.detailsSection}>
+            <div className={styles.toolkitCard}>
+              <span className={styles.toolkitLabel}>Provider type:</span>
+              <span className={styles.toolkitValue}>Custom endpoint</span>
+            </div>
+            <div className={styles.toolkitCard}>
+              <span className={styles.toolkitLabel}>Base URL:</span>
+              <span className={styles.toolkitEndpointValue} title={proxyEndpoint}>{proxyEndpoint}</span>
+              <Button
+                icon={<CopyRegular />}
+                onClick={() => copyToClipboard(proxyEndpoint)}
+                size="small"
+              />
+            </div>
+            <div className={styles.toolkitCard}>
+              <span className={styles.toolkitLabel}>Wire API:</span>
+              <span className={styles.toolkitValue}>Responses</span>
+            </div>
+            <div className={styles.toolkitCard}>
+              <span className={styles.toolkitLabel}>API key:</span>
+              <span className={styles.toolkitValue}>Use the Event API Key above</span>
+              <Button
+                icon={<CopyRegular />}
+                onClick={() => copyToClipboard(attendee.apiKey)}
+                size="small"
+              />
+            </div>
+            <div className={styles.toolkitCard}>
+              <span className={styles.toolkitLabel}>Models to add:</span>
+              <span className={styles.toolkitEndpointValue}>{modelsForCopilot}</span>
+              <Button
+                icon={<CopyRegular />}
+                onClick={() => copyToClipboard(modelsForCopilot)}
+                size="small"
+              />
+            </div>
+          </div>
+          <ol>
+            <li>Open the GitHub Copilot desktop app.</li>
+            <li>Go to <strong>Settings</strong> &gt; <strong>Model providers</strong>.</li>
+            <li>Select <strong>Add provider</strong> &gt; <strong>Custom endpoint</strong>.</li>
+            <li>Enter a display name, paste the Base URL above, set <strong>Wire API</strong> to <strong>Responses</strong>, and paste your Event API Key.</li>
+            <li>Add each model listed above by model ID.</li>
+            <li>For each model, set <strong>Max prompt tokens</strong> to <code>80000</code> and <strong>Max output tokens</strong> to <code>4096</code>.</li>
+            <li>Save the provider and model settings.</li>
+            <li>Start a <strong>new chat</strong>, select the custom model, and send a test message.</li>
+          </ol>
+          <p className={styles.toolkitDescription}>
+            If an existing chat still fails after changing settings, start another new chat and reselect
+            the custom model. Existing chats can keep old provider or token settings.
+          </p>
           <h4>Python example using the OpenAI Python SDK</h4>
           The following Python code demonstrates how to use the OpenAI Python SDK to interact with the Azure OpenAI Service.
           <div className={styles.codeCardWrapper}>
           <div className={styles.codeCardCopyButton}>
             <Button
               icon={<CopyRegular />}
-              onClick={() => copyToClipboard(`# pip install openai\n\nfrom openai import AzureOpenAI\n\nENDPOINT = "${event?.proxyUrl ?? `${window.location.origin}/api/v1`}"\nAPI_KEY = "<YOUR_EVENT_API_KEY>"\n\nAPI_VERSION = "2024-10-21"\nMODEL_NAME = "gpt-4.1-mini"\n\nclient = AzureOpenAI(\n    azure_endpoint=ENDPOINT,\n    api_key=API_KEY,\n    api_version=API_VERSION,\n)\n\nMESSAGES = [\n    {"role": "system", "content": "You are a helpful assistant."},\n    {"role": "user", "content": "Who won the world series in 2020?"},\n    {\n        "role": "assistant",\n        "content": "The Los Angeles Dodgers won the World Series in 2020.",\n    },\n    {"role": "user", "content": "Where was it played?"},\n]\n\ncompletion = client.chat.completions.create(\n    model=MODEL_NAME,\n    messages=MESSAGES,\n)\n\nprint(completion.model_dump_json(indent=2))`)}
+              onClick={() => copyToClipboard(`# pip install openai\n\nfrom openai import AzureOpenAI\n\nENDPOINT = "${proxyEndpoint}"\nAPI_KEY = "<YOUR_EVENT_API_KEY>"\n\nAPI_VERSION = "2025-04-01-preview"\nMODEL_NAME = "${primaryModelName}"\n\nclient = AzureOpenAI(\n    azure_endpoint=ENDPOINT,\n    api_key=API_KEY,\n    api_version=API_VERSION,\n)\n\nresponse = client.responses.create(\n    model=MODEL_NAME,\n    input="Reply with one short sentence confirming the proxy works.",\n    max_output_tokens=256,\n)\n\nprint(response.output_text)`)}
               size="small"
             />
           </div>
@@ -624,11 +685,11 @@ if __name__ == "__main__":
 
 from openai import AzureOpenAI
 
-ENDPOINT = "${event?.proxyUrl ?? `${window.location.origin}/api/v1`}"
+ENDPOINT = "${proxyEndpoint}"
 API_KEY = "<YOUR_EVENT_API_KEY>"
 
-API_VERSION = "2024-10-21"
-MODEL_NAME = "gpt-4.1-mini"
+API_VERSION = "2025-04-01-preview"
+MODEL_NAME = "${primaryModelName}"
 
 client = AzureOpenAI(
     azure_endpoint=ENDPOINT,
@@ -636,22 +697,13 @@ client = AzureOpenAI(
     api_version=API_VERSION,
 )
 
-MESSAGES = [
-    {"role": "system", "content": "You are a helpful assistant."},
-    {"role": "user", "content": "Who won the world series in 2020?"},
-    {
-        "role": "assistant",
-        "content": "The Los Angeles Dodgers won the World Series in 2020.",
-    },
-    {"role": "user", "content": "Where was it played?"},
-]
-
-completion = client.chat.completions.create(
+response = client.responses.create(
     model=MODEL_NAME,
-    messages=MESSAGES,
+    input="Reply with one short sentence confirming the proxy works.",
+    max_output_tokens=256,
 )
 
-print(completion.model_dump_json(indent=2))`}
+print(response.output_text)`}
             </code>
           </pre>
           </div>
