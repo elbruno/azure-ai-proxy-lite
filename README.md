@@ -7,10 +7,24 @@ The solution documentation is published [here](https://microsoft.github.io/azure
 For attendees using the GitHub Copilot desktop app, see the
 [GitHub Copilot App setup guide with screenshots](docs/docs/github_copilot_app.md).
 
-> **Deploying this repo?** See [MY_DEPLOYMENT.md](MY_DEPLOYMENT.md) for the live deployment's URLs,
-> admin access model, and step-by-step testing instructions.
+> **Deploying this repo?** Start with the public [Deploy to Azure guide](docs/docs/deployment/azure.md).
 
-![](docs/static/img/openai_proxy_banner.jpeg)
+![](docs/docs/media/openai_proxy_banner.jpeg)
+
+## Documentation by role
+
+| Role | Start here | Continue with |
+|---|---|---|
+| **Event administrator** | [Deploy to Azure](docs/docs/deployment/azure.md) | [Configure resources](docs/docs/resources.md), [create events](docs/docs/events.md), [plan capacity](docs/docs/capacity.md), [review reporting](docs/docs/reporting.md), and [run load tests](docs/docs/20-service-installation/70-testing/20-load-testing.md) |
+| **Event attendee** | [Register for an event](docs/docs/attendee.md) | [Configure the GitHub Copilot App](docs/docs/github_copilot_app.md) or use the [Python](examples/python/openai_sdk_1.x/azure_openai_responses.py) and [C#](examples/dotnet/microsoft_extensions_ai_responses.cs) samples |
+
+Additional references:
+
+- [Full documentation index](docs/docs/index.md)
+- [Managed Identity configuration](docs/docs/deployment/managed_identity.md)
+- [Security architecture](docs/docs/security_architecture.md)
+- [Copilot concurrency test results](docs/docs/20-service-installation/70-testing/20-load-testing.md#measured-results)
+- [Frequently asked questions](docs/docs/faq.md)
 
 ## Architecture
 

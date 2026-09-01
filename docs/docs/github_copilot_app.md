@@ -4,6 +4,30 @@ The [GitHub Copilot desktop app](https://github.com/features/copilot) can call m
 Azure AI Proxy directly, through its **Model providers** settings. This lets attendees chat with
 proxy-managed models (GPT-5-family and others) from a familiar client with no SDK or code required.
 
+## TL;DR — minimum setup
+
+1. Register for the event and copy the **Proxy Endpoint**, **Event API Key**, and model ID from the
+   event page.
+1. In the GitHub Copilot App, open **Settings** → **Model providers** → **Add provider** →
+   **Custom endpoint**.
+1. Configure the provider:
+
+    | Field | Value |
+    |---|---|
+    | Display name | `Azure AI Proxy` |
+    | Base URL | Paste the event **Proxy Endpoint** exactly; it already ends in `/api/v1` |
+    | Wire API | **Responses** |
+    | API key | Paste the **Event API Key** |
+    | Custom headers | Leave blank |
+
+1. Add the event model ID, then set **Max prompt tokens** to `80000` and
+   **Max output tokens** to `4096`.
+1. Save everything, start a **new chat**, and select the new custom model.
+
+!!! important
+    GPT-5-family models must use **Responses**. After any provider or model setting change, start a
+    new chat because an existing chat can retain the previous configuration.
+
 There are two ways to wire the proxy up as a provider — pick whichever matches the model you're
 adding:
 
@@ -21,7 +45,7 @@ adding:
 
 - Register for an event to obtain your **event API key** and the **proxy endpoint URL**
   (see [Attendee registration](attendee.md)).
-- The proxy endpoint always ends in `/api/v1` — for example:
+- The event page's proxy endpoint already ends in `/api/v1` — for example:
   `https://<your-proxy-host>/api/v1`
 
 ## Option A — Custom endpoint (recommended for GPT-5-family)
@@ -36,7 +60,7 @@ adding:
     | Field | Value |
     |---|---|
     | Display name | Any name you like, e.g. `Azure AI Proxy` |
-    | Base URL | Your proxy endpoint + `/api/v1`, e.g. `https://<your-proxy-host>/api/v1` |
+    | Base URL | Paste the proxy endpoint from the event page exactly, e.g. `https://<your-proxy-host>/api/v1` |
     | Wire API | **Responses** |
     | API key | Your event API key |
     | Custom headers | Leave blank |
@@ -65,7 +89,7 @@ adding:
 
     | Field | Value |
     |---|---|
-    | Endpoint | Your proxy endpoint + `/api/v1`, e.g. `https://<your-proxy-host>/api/v1` |
+    | Endpoint | Paste the proxy endpoint from the event page exactly, e.g. `https://<your-proxy-host>/api/v1` |
     | API version | `2025-04-01-preview` or later (GPT-5-family Responses API requires `2025-03-01-preview`+) |
     | API key | Your event API key |
     | Wire API | **Responses** for GPT-5-family models |
